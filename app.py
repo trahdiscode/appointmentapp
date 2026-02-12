@@ -43,7 +43,16 @@ else:
     df = pd.DataFrame(st.session_state.appointments)
     df = df.sort_values(by=["Date", "Time"]).reset_index(drop=True)
 
-    # Add proper numbering starting from 1
+    # Format date as DD/MM/YYYY
+    df["Date"] = df["Date"].apply(lambda d: d.strftime("%d/%m/%Y"))
+
+    # Add numbering starting from 1
     df.insert(0, "No", range(1, len(df) + 1))
 
-    st.dataframe(df, hide_index=True)
+    # Style: left-align the "No" column
+    styled_df = df.style.set_properties(
+        subset=["No"],
+        **{"text-align": "left"}
+    )
+
+    st.dataframe(styled_df, hide_index=True)
