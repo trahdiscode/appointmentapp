@@ -6,14 +6,13 @@ from datetime import date
 
 # ---------- Page configuration ----------
 st.set_page_config(page_title="Appointment Manager", layout="centered")
-
 st.title("📅 Appointment Manager")
 
-# ---------- Database setup ----------
-conn = sqlite3.connect("app.db", check_same_thread=False)
+# ---------- Database connection (FRESH DB) ----------
+conn = sqlite3.connect("app_v2.db", check_same_thread=False)
 cur = conn.cursor()
 
-# Users table (USERNAME based)
+# ---------- Create tables ----------
 cur.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,7 +21,6 @@ CREATE TABLE IF NOT EXISTS users (
 )
 """)
 
-# Appointments table
 cur.execute("""
 CREATE TABLE IF NOT EXISTS appointments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,7 +137,6 @@ cur.execute(
     SELECT title, date, time, description
     FROM appointments
     WHERE user_id=?
-    ORDER BY date, time
     """,
     (st.session_state.user_id,)
 )
