@@ -182,24 +182,25 @@ st.markdown(grid, unsafe_allow_html=True)
 # ---------- BOOK SLOT ----------
 st.subheader("📅 Book Parking Slot")
 
-# --- INPUTS (OUTSIDE FORM → LIVE UPDATES WORK) ---
+# -------- LIVE INPUTS (outside form) --------
 booking_date = st.date_input("Date", min_value=date.today())
 entry_time = st.time_input("Entry Time", value=datetime.now().time())
 exit_time = st.time_input("Exit Time")
 
-# --- LIVE OVERNIGHT WARNING ---
-overnight = exit_time <= entry_time
+start_dt = datetime.combine(booking_date, entry_time)
+end_dt = datetime.combine(booking_date, exit_time)
+
+overnight = end_dt <= start_dt
+
+# -------- LIVE WARNING (ALWAYS CORRECT) --------
 if overnight:
     st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
-# --- SUBMIT FORM (NO INPUTS INSIDE) ---
+# -------- SUBMIT --------
 with st.form("booking"):
     submit = st.form_submit_button("Confirm Booking")
 
     if submit:
-        start_dt = datetime.combine(booking_date, entry_time)
-        end_dt = datetime.combine(booking_date, exit_time)
-
         if overnight:
             end_dt += timedelta(days=1)
 
@@ -210,6 +211,7 @@ with st.form("booking"):
             start_dt.strftime("%Y-%m-%d %H:%M"),
             end_dt.strftime("%Y-%m-%d %H:%M")
         ))
+
         blocked = {r[0] for r in cur.fetchall()}
         available = [s for s in slots if s not in blocked]
 
@@ -229,8 +231,5 @@ with st.form("booking"):
             end_dt.strftime("%Y-%m-%d %H:%M")
         ))
         conn.commit()
-
-        if overnight:
-            st.warning("Booking confirmed as overnight (exit next day).")
 
         st.success("Slot booked successfully")
