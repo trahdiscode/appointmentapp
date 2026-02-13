@@ -8,6 +8,9 @@ from datetime import date
 st.set_page_config(page_title="Parking Slot Booking", layout="centered")
 st.title("🅿️ College Parking Slot Booking System")
 
+# ---------- AUTO REFRESH (REAL-TIME) ----------
+st.autorefresh(interval=5000, key="refresh")
+
 # ---------- DARK MODE CSS ----------
 st.markdown("""
 <style>
@@ -16,36 +19,25 @@ st.markdown("""
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
 }
-h1, h2, h3 {
-    color: #ffffff;
-    font-weight: 600;
-}
 section[data-testid="stVerticalBlock"] > div {
     background-color: #161b22;
-    padding: 20px;
+    padding: 18px;
     border-radius: 10px;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
-input, textarea, select {
-    background-color: #0f1117 !important;
-    color: #e6e6e6 !important;
-    border: 1px solid #30363d !important;
-    border-radius: 6px !important;
+.slot-box {
+    display: inline-block;
+    padding: 10px 14px;
+    margin: 6px;
+    border-radius: 6px;
+    font-weight: 600;
 }
-button {
-    background-color: #238636 !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 6px !important;
-    font-weight: 500 !important;
-}
-button:hover {
-    background-color: #2ea043 !important;
-}
+.free { background-color: #238636; color: white; }
+.busy { background-color: #da3633; color: white; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- DATABASE (FRESH DB) ----------
+# ---------- DATABASE ----------
 conn = sqlite3.connect("parking_v2.db", check_same_thread=False)
 cur = conn.cursor()
 
@@ -72,7 +64,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password: str) -> str:
+def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(username, password):
@@ -93,10 +85,9 @@ def create_user(username, password):
     except sqlite3.IntegrityError:
         return False
 
-# ---------- SESSION STATE (SAFE INIT) ----------
+# ---------- SESSION STATE ----------
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
-
 if "vehicle_number" not in st.session_state:
     st.session_state.vehicle_number = None
 
@@ -105,10 +96,8 @@ if st.session_state.user_id is None:
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        st.subheader("Login")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-
         if st.button("Login"):
             user = get_user(username, password)
             if user:
@@ -116,17 +105,13 @@ if st.session_state.user_id is None:
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
             else:
-                st.error("Invalid username or password")
+                st.error("Invalid credentials")
 
     with tab2:
-        st.subheader("Register")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-
+        username = st.text_input("New Username")
+        password = st.text_input("New Password", type="password")
         if st.button("Register"):
-            if username.strip() == "" or password.strip() == "":
-                st.error("Fields cannot be empty")
-            elif create_user(username, password):
+            if create_user(username, password):
                 st.success("Account created. Login now.")
             else:
                 st.error("Username already exists")
@@ -139,64 +124,68 @@ if st.button("Logout"):
     st.session_state.vehicle_number = None
     st.rerun()
 
-# ---------- VEHICLE NUMBER (ONE TIME) ----------
+# ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
-    st.subheader("Enter Vehicle Number (One Time)")
-    vehicle_input = st.text_input("Vehicle Number (e.g. TN01AB1234)")
-
+    vehicle = st.text_input("Enter Vehicle Number (one time)")
     if st.button("Save Vehicle Number"):
-        if vehicle_input.strip() == "":
-            st.error("Vehicle number cannot be empty")
-        else:
-            cur.execute(
-                "UPDATE users SET vehicle_number=? WHERE id=?",
-                (vehicle_input.upper(), st.session_state.user_id)
-            )
-            conn.commit()
-            st.session_state.vehicle_number = vehicle_input.upper()
-            st.success("Vehicle number saved")
-            st.rerun()
-
+        cur.execute(
+            "UPDATE users SET vehicle_number=? WHERE id=?",
+            (vehicle.upper(), st.session_state.user_id)
+        )
+        conn.commit()
+        st.session_state.vehicle_number = vehicle.upper()
+        st.rerun()
     st.stop()
 
-# ---------- PREDEFINED PARKING SLOTS ----------
+# ---------- PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
+
+# ---------- REAL-TIME SLOT AVAILABILITY ----------
+st.subheader("📊 Live Slot Availability (Today)")
+
+today = date.today().strftime("%d/%m/%Y")
+cur.execute(
+    "SELECT slot_number FROM bookings WHERE parking_date=?",
+    (today,)
+)
+occupied = {row[0] for row in cur.fetchall()}
+
+for slot in slots:
+    if slot in occupied:
+        st.markdown(f"<div class='slot-box busy'>{slot}</div>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='slot-box free'>{slot}</div>", unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
 st.subheader("Book Parking Slot")
 
 with st.form("booking_form", clear_on_submit=True):
     st.text_input("Vehicle Number", value=st.session_state.vehicle_number, disabled=True)
-    parking_date = st.date_input("Parking Date", min_value=date.today())
+    parking_date = st.date_input("Date", min_value=date.today())
     entry_time = st.time_input("Entry Time")
-    slot_number = st.selectbox("Select Slot", slots)
-
+    slot = st.selectbox("Select Slot", slots)
     submit = st.form_submit_button("Book Slot")
 
     if submit:
         cur.execute(
             "SELECT 1 FROM bookings WHERE parking_date=? AND slot_number=?",
-            (parking_date.strftime("%d/%m/%Y"), slot_number)
+            (parking_date.strftime("%d/%m/%Y"), slot)
         )
-
         if cur.fetchone():
-            st.error(f"Slot {slot_number} is already booked for this date.")
+            st.error("Slot already booked")
         else:
             cur.execute(
                 "INSERT INTO bookings (user_id, parking_date, entry_time, slot_number) VALUES (?, ?, ?, ?)",
-                (
-                    st.session_state.user_id,
-                    parking_date.strftime("%d/%m/%Y"),
-                    entry_time.strftime("%H:%M"),
-                    slot_number
-                )
+                (st.session_state.user_id,
+                 parking_date.strftime("%d/%m/%Y"),
+                 entry_time.strftime("%H:%M"),
+                 slot)
             )
             conn.commit()
-            st.success(f"Slot {slot_number} booked successfully")
+            st.success("Slot booked")
 
-# ---------- SHOW BOOKINGS ----------
-st.subheader("My Parking Bookings")
-
+# ---------- MY BOOKINGS ----------
+st.subheader("My Bookings")
 cur.execute(
     "SELECT parking_date, entry_time, slot_number FROM bookings WHERE user_id=?",
     (st.session_state.user_id,)
@@ -205,7 +194,6 @@ rows = cur.fetchall()
 
 if rows:
     df = pd.DataFrame(rows, columns=["Date", "Entry Time", "Slot"])
-    df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
     st.dataframe(df, hide_index=True)
 else:
     st.info("No bookings yet")
