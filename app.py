@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ---------- PAGE CONFIG (MUST BE FIRST) ----------
+# ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 
 from streamlit_autorefresh import st_autorefresh
@@ -19,19 +19,14 @@ st.markdown("""
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
 }
-.block {
-    background-color: #161b22;
-    padding: 18px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-}
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 10px;
+    max-width: 900px;
 }
 .slot {
-    padding: 12px 0;
+    padding: 14px 0;
     text-align: center;
     border-radius: 6px;
     font-weight: 700;
@@ -63,8 +58,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     user_id INTEGER NOT NULL,
     slot_number TEXT NOT NULL,
     start_datetime TEXT NOT NULL,
-    end_datetime TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    end_datetime TEXT NOT NULL
 )
 """)
 
@@ -92,10 +86,10 @@ def create_user(u, p):
     except sqlite3.IntegrityError:
         return False
 
-# ---------- SESSION STATE ----------
-for key in ("user_id", "vehicle_number"):
-    if key not in st.session_state:
-        st.session_state[key] = None
+# ---------- SESSION ----------
+for k in ("user_id", "vehicle_number"):
+    if k not in st.session_state:
+        st.session_state[k] = None
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
@@ -127,22 +121,20 @@ if st.session_state.user_id is None:
     st.stop()
 
 # ---------- HEADER ----------
-with st.container():
-    col1, col2, col3 = st.columns([6, 3, 1])
-    with col1:
-        st.markdown("## 🅿️ Parking Slot Booking")
-    with col2:
-        st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
-    with col3:
-        if st.button("Logout", use_container_width=True):
-            st.session_state.user_id = None
-            st.session_state.vehicle_number = None
-            st.rerun()
+col1, col2, col3 = st.columns([6, 3, 1])
+with col1:
+    st.markdown("## 🅿️ Parking Slot Booking")
+with col2:
+    st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
+with col3:
+    if st.button("Logout", use_container_width=True):
+        st.session_state.user_id = None
+        st.session_state.vehicle_number = None
+        st.rerun()
 
 # ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
-    st.markdown("### 🚘 Register Vehicle Number")
-    v = st.text_input("Vehicle Number")
+    v = st.text_input("Enter Vehicle Number (one time)")
     if st.button("Save Vehicle Number", type="primary"):
         cur.execute(
             "UPDATE users SET vehicle_number=? WHERE id=?",
@@ -153,11 +145,12 @@ if st.session_state.vehicle_number is None:
         st.rerun()
     st.stop()
 
-# ---------- PARKING SLOTS ----------
+# ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
 # ---------- LIVE AVAILABILITY ----------
-st.markdown("### 📊 Live Slot Availability (Now)")
+st.subheader("📊 Live Slot Availability (Now)")
+
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 cur.execute("""
@@ -188,10 +181,11 @@ for s in slots:
     """
 grid += "</div>"
 
+# ✅ THIS LINE IS THE FIX
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-st.markdown("### 📅 Book Parking Slot")
+st.subheader("📅 Book Parking Slot")
 
 with st.form("booking"):
     booking_date = st.date_input("Date", min_value=date.today())
@@ -201,10 +195,8 @@ with st.form("booking"):
     start_dt = datetime.combine(booking_date, entry_time)
     end_dt = datetime.combine(booking_date, exit_time)
 
-    overnight = False
     if exit_time <= entry_time:
         end_dt += timedelta(days=1)
-        overnight = True
         st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
     cur.execute("""
@@ -218,7 +210,6 @@ with st.form("booking"):
     available = [s for s in slots if s not in blocked]
 
     slot = st.selectbox("Available Slots", available)
-
     submit = st.form_submit_button("Confirm Booking")
 
     if submit:
