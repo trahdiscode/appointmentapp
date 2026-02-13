@@ -7,78 +7,67 @@ from datetime import date
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Appointment Manager", layout="centered")
 
-# ---------- DARK CARTOON CSS ----------
+# ---------- CLEAN DARK MODE CSS ----------
 st.markdown("""
 <style>
-/* App background */
+/* Main app background */
 .stApp {
-    background-color: #0e0e0e;
-    color: #ffffff;
-    font-family: "Comic Sans MS", "Trebuchet MS", sans-serif;
+    background-color: #0f1117;
+    color: #e6e6e6;
+    font-family: "Segoe UI", sans-serif;
 }
 
 /* Headings */
 h1, h2, h3 {
     color: #ffffff;
-    font-weight: 900;
+    font-weight: 600;
 }
 
-/* Comic panels / cards */
-div[data-testid="stVerticalBlock"] > div {
-    background-color: #121212;
-    border: 3px solid #ffffff;
-    border-radius: 18px;
+/* Containers */
+section[data-testid="stVerticalBlock"] > div {
+    background-color: #161b22;
     padding: 20px;
-    margin-bottom: 22px;
-    box-shadow: 6px 6px 0px #000000;
+    border-radius: 10px;
+    margin-bottom: 18px;
 }
 
 /* Inputs */
 input, textarea {
-    background-color: #0e0e0e !important;
-    color: #ffffff !important;
-    border: 2px solid #ffffff !important;
-    border-radius: 10px !important;
+    background-color: #0f1117 !important;
+    color: #e6e6e6 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 6px !important;
 }
 
 /* Buttons */
 button {
-    background-color: #0e0e0e !important;
+    background-color: #238636 !important;
     color: #ffffff !important;
-    border: 3px solid #ffffff !important;
-    border-radius: 14px !important;
-    font-weight: bold !important;
-    box-shadow: 4px 4px 0px #000000;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
 }
 
 button:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px #000000;
+    background-color: #2ea043 !important;
 }
 
 /* Tabs */
 button[data-baseweb="tab"] {
-    background-color: #0e0e0e !important;
-    color: #ffffff !important;
-    border: 2px solid #ffffff !important;
-    font-weight: bold;
+    background-color: transparent !important;
+    color: #e6e6e6 !important;
+    font-weight: 500;
 }
 
 /* Dataframe */
 .stDataFrame {
-    background-color: #121212;
-    border: 3px solid #ffffff;
-    border-radius: 14px;
-}
-
-/* Success / error text */
-.stAlert {
-    border: 2px solid white;
+    background-color: #0f1117;
+    border-radius: 8px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🗓️ Appointment Manager")
+st.title("📅 Appointment Manager")
 
 # ---------- DATABASE ----------
 conn = sqlite3.connect("app_v2.db", check_same_thread=False)
@@ -107,7 +96,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password):
+def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(username, password):
@@ -151,8 +140,8 @@ if st.session_state.user_id is None:
 
     with tab2:
         st.subheader("Register")
-        username = st.text_input("New Username")
-        password = st.text_input("New Password", type="password")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
 
         if st.button("Register"):
             if username.strip() == "" or password.strip() == "":
@@ -208,7 +197,7 @@ cur.execute(
 rows = cur.fetchall()
 
 if not rows:
-    st.info("No appointments yet")
+    st.info("No appointments added yet")
 else:
     df = pd.DataFrame(rows, columns=["Title", "Date", "Time", "Description"])
     df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
