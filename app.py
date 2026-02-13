@@ -1,15 +1,17 @@
 import streamlit as st
+
+# ---------- PAGE CONFIG (MUST BE FIRST) ----------
+st.set_page_config(page_title="Parking Slot Booking", layout="centered")
+
+from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 import pandas as pd
 from datetime import date
-from streamlit_autorefresh import st_autorefresh
 
-# ---------- AUTO REFRESH (REAL TIME) ----------
+# ---------- AUTO REFRESH ----------
 st_autorefresh(interval=5000, key="refresh")
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(page_title="Parking Slot Booking", layout="centered")
 st.title("🅿️ College Parking Slot Booking System")
 
 # ---------- DARK MODE CSS ----------
@@ -138,17 +140,14 @@ if st.session_state.vehicle_number is None:
         st.rerun()
     st.stop()
 
-# ---------- SLOTS ----------
+# ---------- PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
 # ---------- REAL-TIME AVAILABILITY ----------
 st.subheader("📊 Live Slot Availability (Today)")
 
 today = date.today().strftime("%d/%m/%Y")
-cur.execute(
-    "SELECT slot_number FROM bookings WHERE parking_date=?",
-    (today,)
-)
+cur.execute("SELECT slot_number FROM bookings WHERE parking_date=?", (today,))
 occupied = {r[0] for r in cur.fetchall()}
 
 for s in slots:
@@ -184,6 +183,7 @@ with st.form("book"):
 
 # ---------- MY BOOKINGS ----------
 st.subheader("My Bookings")
+
 cur.execute(
     "SELECT parking_date, entry_time, slot_number FROM bookings WHERE user_id=?",
     (st.session_state.user_id,)
