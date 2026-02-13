@@ -9,7 +9,7 @@ import hashlib
 import pandas as pd
 from datetime import date
 
-# ---------- AUTO REFRESH ----------
+# ---------- AUTO REFRESH (REAL TIME) ----------
 st_autorefresh(interval=5000, key="refresh")
 
 st.title("🅿️ College Parking Slot Booking System")
@@ -28,15 +28,27 @@ section[data-testid="stVerticalBlock"] > div {
     border-radius: 10px;
     margin-bottom: 16px;
 }
-.slot {
-    display: inline-block;
-    padding: 10px 14px;
-    margin: 6px;
-    border-radius: 6px;
-    font-weight: 600;
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-width: 600px;
 }
-.free { background-color: #238636; color: white; }
-.busy { background-color: #da3633; color: white; }
+.slot-box {
+    text-align: center;
+    padding: 14px 0;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 16px;
+}
+.free {
+    background-color: #238636;
+    color: white;
+}
+.busy {
+    background-color: #da3633;
+    color: white;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -99,22 +111,22 @@ if st.session_state.user_id is None:
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
         if st.button("Login"):
-            user = get_user(u, p)
+            user = get_user(username, password)
             if user:
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
             else:
-                st.error("Invalid credentials")
+                st.error("Invalid username or password")
 
     with tab2:
-        u = st.text_input("New Username")
-        p = st.text_input("New Password", type="password")
+        username = st.text_input("New Username")
+        password = st.text_input("New Password", type="password")
         if st.button("Register"):
-            if create_user(u, p):
+            if create_user(username, password):
                 st.success("Account created. Login now.")
             else:
                 st.error("Username already exists")
@@ -129,32 +141,39 @@ if st.button("Logout"):
 
 # ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
-    v = st.text_input("Enter Vehicle Number (one time)")
+    vehicle = st.text_input("Enter Vehicle Number (one time)")
     if st.button("Save Vehicle Number"):
         cur.execute(
             "UPDATE users SET vehicle_number=? WHERE id=?",
-            (v.upper(), st.session_state.user_id)
+            (vehicle.upper(), st.session_state.user_id)
         )
         conn.commit()
-        st.session_state.vehicle_number = v.upper()
+        st.session_state.vehicle_number = vehicle.upper()
         st.rerun()
     st.stop()
 
 # ---------- PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# ---------- REAL-TIME AVAILABILITY ----------
+# ---------- REAL-TIME SLOT AVAILABILITY (GRID VIEW) ----------
 st.subheader("📊 Live Slot Availability (Today)")
 
 today = date.today().strftime("%d/%m/%Y")
-cur.execute("SELECT slot_number FROM bookings WHERE parking_date=?", (today,))
-occupied = {r[0] for r in cur.fetchall()}
+cur.execute(
+    "SELECT slot_number FROM bookings WHERE parking_date=?",
+    (today,)
+)
+occupied = {row[0] for row in cur.fetchall()}
 
-for s in slots:
-    if s in occupied:
-        st.markdown(f"<div class='slot busy'>{s}</div>", unsafe_allow_html=True)
+grid_html = "<div class='slot-grid'>"
+for slot in slots:
+    if slot in occupied:
+        grid_html += f"<div class='slot-box busy'>{slot}</div>"
     else:
-        st.markdown(f"<div class='slot free'>{s}</div>", unsafe_allow_html=True)
+        grid_html += f"<div class='slot-box free'>{slot}</div>"
+grid_html += "</div>"
+
+st.markdown(grid_html, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
 st.subheader("Book Parking Slot")
@@ -179,7 +198,7 @@ with st.form("book"):
                 (st.session_state.user_id, d.strftime("%d/%m/%Y"), t.strftime("%H:%M"), s)
             )
             conn.commit()
-            st.success("Slot booked")
+            st.success("Slot booked successfully")
 
 # ---------- MY BOOKINGS ----------
 st.subheader("My Bookings")
