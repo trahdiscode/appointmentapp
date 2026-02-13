@@ -3,13 +3,14 @@ import sqlite3
 import hashlib
 import pandas as pd
 from datetime import date
+from streamlit_autorefresh import st_autorefresh
+
+# ---------- AUTO REFRESH (REAL TIME) ----------
+st_autorefresh(interval=5000, key="refresh")
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Parking Slot Booking", layout="centered")
 st.title("🅿️ College Parking Slot Booking System")
-
-# ---------- AUTO REFRESH (REAL-TIME) ----------
-st.autorefresh(interval=5000, key="refresh")
 
 # ---------- DARK MODE CSS ----------
 st.markdown("""
@@ -25,7 +26,7 @@ section[data-testid="stVerticalBlock"] > div {
     border-radius: 10px;
     margin-bottom: 16px;
 }
-.slot-box {
+.slot {
     display: inline-block;
     padding: 10px 14px;
     margin: 6px;
@@ -64,21 +65,21 @@ CREATE TABLE IF NOT EXISTS bookings (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+def hash_password(p):
+    return hashlib.sha256(p.encode()).hexdigest()
 
-def get_user(username, password):
+def get_user(u, p):
     cur.execute(
         "SELECT id, vehicle_number FROM users WHERE username=? AND password_hash=?",
-        (username, hash_password(password))
+        (u, hash_password(p))
     )
     return cur.fetchone()
 
-def create_user(username, password):
+def create_user(u, p):
     try:
         cur.execute(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, hash_password(password))
+            (u, hash_password(p))
         )
         conn.commit()
         return True
@@ -96,10 +97,10 @@ if st.session_state.user_id is None:
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
         if st.button("Login"):
-            user = get_user(username, password)
+            user = get_user(u, p)
             if user:
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
@@ -108,10 +109,10 @@ if st.session_state.user_id is None:
                 st.error("Invalid credentials")
 
     with tab2:
-        username = st.text_input("New Username")
-        password = st.text_input("New Password", type="password")
+        u = st.text_input("New Username")
+        p = st.text_input("New Password", type="password")
         if st.button("Register"):
-            if create_user(username, password):
+            if create_user(u, p):
                 st.success("Account created. Login now.")
             else:
                 st.error("Username already exists")
@@ -126,21 +127,21 @@ if st.button("Logout"):
 
 # ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
-    vehicle = st.text_input("Enter Vehicle Number (one time)")
+    v = st.text_input("Enter Vehicle Number (one time)")
     if st.button("Save Vehicle Number"):
         cur.execute(
             "UPDATE users SET vehicle_number=? WHERE id=?",
-            (vehicle.upper(), st.session_state.user_id)
+            (v.upper(), st.session_state.user_id)
         )
         conn.commit()
-        st.session_state.vehicle_number = vehicle.upper()
+        st.session_state.vehicle_number = v.upper()
         st.rerun()
     st.stop()
 
-# ---------- PARKING SLOTS ----------
+# ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# ---------- REAL-TIME SLOT AVAILABILITY ----------
+# ---------- REAL-TIME AVAILABILITY ----------
 st.subheader("📊 Live Slot Availability (Today)")
 
 today = date.today().strftime("%d/%m/%Y")
@@ -148,38 +149,35 @@ cur.execute(
     "SELECT slot_number FROM bookings WHERE parking_date=?",
     (today,)
 )
-occupied = {row[0] for row in cur.fetchall()}
+occupied = {r[0] for r in cur.fetchall()}
 
-for slot in slots:
-    if slot in occupied:
-        st.markdown(f"<div class='slot-box busy'>{slot}</div>", unsafe_allow_html=True)
+for s in slots:
+    if s in occupied:
+        st.markdown(f"<div class='slot busy'>{s}</div>", unsafe_allow_html=True)
     else:
-        st.markdown(f"<div class='slot-box free'>{slot}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='slot free'>{s}</div>", unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
 st.subheader("Book Parking Slot")
 
-with st.form("booking_form", clear_on_submit=True):
+with st.form("book"):
     st.text_input("Vehicle Number", value=st.session_state.vehicle_number, disabled=True)
-    parking_date = st.date_input("Date", min_value=date.today())
-    entry_time = st.time_input("Entry Time")
-    slot = st.selectbox("Select Slot", slots)
-    submit = st.form_submit_button("Book Slot")
+    d = st.date_input("Date", min_value=date.today())
+    t = st.time_input("Entry Time")
+    s = st.selectbox("Slot", slots)
+    ok = st.form_submit_button("Book")
 
-    if submit:
+    if ok:
         cur.execute(
             "SELECT 1 FROM bookings WHERE parking_date=? AND slot_number=?",
-            (parking_date.strftime("%d/%m/%Y"), slot)
+            (d.strftime("%d/%m/%Y"), s)
         )
         if cur.fetchone():
             st.error("Slot already booked")
         else:
             cur.execute(
                 "INSERT INTO bookings (user_id, parking_date, entry_time, slot_number) VALUES (?, ?, ?, ?)",
-                (st.session_state.user_id,
-                 parking_date.strftime("%d/%m/%Y"),
-                 entry_time.strftime("%H:%M"),
-                 slot)
+                (st.session_state.user_id, d.strftime("%d/%m/%Y"), t.strftime("%H:%M"), s)
             )
             conn.commit()
             st.success("Slot booked")
@@ -193,7 +191,7 @@ cur.execute(
 rows = cur.fetchall()
 
 if rows:
-    df = pd.DataFrame(rows, columns=["Date", "Entry Time", "Slot"])
+    df = pd.DataFrame(rows, columns=["Date", "Time", "Slot"])
     st.dataframe(df, hide_index=True)
 else:
     st.info("No bookings yet")
