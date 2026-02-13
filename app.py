@@ -6,6 +6,7 @@ from datetime import date
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="Parking Slot Booking", layout="centered")
+st.title("🅿️ College Parking Slot Booking System")
 
 # ---------- DARK MODE CSS ----------
 st.markdown("""
@@ -15,7 +16,10 @@ st.markdown("""
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
 }
-h1, h2, h3 { color: #ffffff; font-weight: 600; }
+h1, h2, h3 {
+    color: #ffffff;
+    font-weight: 600;
+}
 section[data-testid="stVerticalBlock"] > div {
     background-color: #161b22;
     padding: 20px;
@@ -33,15 +37,16 @@ button {
     color: #ffffff !important;
     border: none !important;
     border-radius: 6px !important;
+    font-weight: 500 !important;
 }
-button:hover { background-color: #2ea043 !important; }
+button:hover {
+    background-color: #2ea043 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🅿️ College Parking Slot Booking")
-
-# ---------- DATABASE ----------
-conn = sqlite3.connect("parking.db", check_same_thread=False)
+# ---------- DATABASE (FRESH DB) ----------
+conn = sqlite3.connect("parking_v2.db", check_same_thread=False)
 cur = conn.cursor()
 
 cur.execute("""
@@ -67,7 +72,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password):
+def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(username, password):
@@ -88,7 +93,7 @@ def create_user(username, password):
     except sqlite3.IntegrityError:
         return False
 
-# ---------- SESSION STATE (SAFE INITIALIZATION) ----------
+# ---------- SESSION STATE (SAFE INIT) ----------
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
 
@@ -134,7 +139,7 @@ if st.button("Logout"):
     st.session_state.vehicle_number = None
     st.rerun()
 
-# ---------- SET VEHICLE NUMBER (ONCE) ----------
+# ---------- VEHICLE NUMBER (ONE TIME) ----------
 if st.session_state.vehicle_number is None:
     st.subheader("Enter Vehicle Number (One Time)")
     vehicle_input = st.text_input("Vehicle Number (e.g. TN01AB1234)")
@@ -154,10 +159,10 @@ if st.session_state.vehicle_number is None:
 
     st.stop()
 
-# ---------- PREDEFINED SLOTS ----------
+# ---------- PREDEFINED PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# ---------- ADD BOOKING ----------
+# ---------- BOOK SLOT ----------
 st.subheader("Book Parking Slot")
 
 with st.form("booking_form", clear_on_submit=True):
@@ -173,8 +178,9 @@ with st.form("booking_form", clear_on_submit=True):
             "SELECT 1 FROM bookings WHERE parking_date=? AND slot_number=?",
             (parking_date.strftime("%d/%m/%Y"), slot_number)
         )
+
         if cur.fetchone():
-            st.error(f"Slot {slot_number} is already booked")
+            st.error(f"Slot {slot_number} is already booked for this date.")
         else:
             cur.execute(
                 "INSERT INTO bookings (user_id, parking_date, entry_time, slot_number) VALUES (?, ?, ?, ?)",
@@ -189,7 +195,7 @@ with st.form("booking_form", clear_on_submit=True):
             st.success(f"Slot {slot_number} booked successfully")
 
 # ---------- SHOW BOOKINGS ----------
-st.subheader("My Bookings")
+st.subheader("My Parking Bookings")
 
 cur.execute(
     "SELECT parking_date, entry_time, slot_number FROM bookings WHERE user_id=?",
