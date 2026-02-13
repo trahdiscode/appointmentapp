@@ -5,25 +5,22 @@ import pandas as pd
 from datetime import date
 
 # ---------- PAGE CONFIG ----------
-st.set_page_config(page_title="Appointment Manager", layout="centered")
+st.set_page_config(page_title="Parking Slot Booking", layout="centered")
 
-# ---------- CLEAN DARK MODE CSS ----------
+# ---------- DARK MODE CSS ----------
 st.markdown("""
 <style>
-/* Main app background */
 .stApp {
     background-color: #0f1117;
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
 }
 
-/* Headings */
 h1, h2, h3 {
     color: #ffffff;
     font-weight: 600;
 }
 
-/* Containers */
 section[data-testid="stVerticalBlock"] > div {
     background-color: #161b22;
     padding: 20px;
@@ -31,7 +28,6 @@ section[data-testid="stVerticalBlock"] > div {
     margin-bottom: 18px;
 }
 
-/* Inputs */
 input, textarea {
     background-color: #0f1117 !important;
     color: #e6e6e6 !important;
@@ -39,7 +35,6 @@ input, textarea {
     border-radius: 6px !important;
 }
 
-/* Buttons */
 button {
     background-color: #238636 !important;
     color: #ffffff !important;
@@ -52,14 +47,11 @@ button:hover {
     background-color: #2ea043 !important;
 }
 
-/* Tabs */
 button[data-baseweb="tab"] {
     background-color: transparent !important;
     color: #e6e6e6 !important;
-    font-weight: 500;
 }
 
-/* Dataframe */
 .stDataFrame {
     background-color: #0f1117;
     border-radius: 8px;
@@ -67,10 +59,10 @@ button[data-baseweb="tab"] {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📅 Appointment Manager")
+st.title("🅿️ Parking Slot Booking System")
 
 # ---------- DATABASE ----------
-conn = sqlite3.connect("app_v2.db", check_same_thread=False)
+conn = sqlite3.connect("parking.db", check_same_thread=False)
 cur = conn.cursor()
 
 cur.execute("""
@@ -82,13 +74,13 @@ CREATE TABLE IF NOT EXISTS users (
 """)
 
 cur.execute("""
-CREATE TABLE IF NOT EXISTS appointments (
+CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    date TEXT NOT NULL,
-    time TEXT NOT NULL,
-    description TEXT,
+    vehicle_number TEXT NOT NULL,
+    parking_date TEXT NOT NULL,
+    entry_time TEXT NOT NULL,
+    slot_number TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )
 """)
@@ -96,7 +88,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password: str) -> str:
+def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(username, password):
@@ -158,47 +150,57 @@ if st.button("Logout"):
     st.session_state.user_id = None
     st.rerun()
 
-# ---------- ADD APPOINTMENT ----------
-st.subheader("Add Appointment")
+# ---------- ADD BOOKING ----------
+st.subheader("Book a Parking Slot")
 
-with st.form("appointment_form", clear_on_submit=True):
-    title = st.text_input("Title")
-    app_date = st.date_input("Date", min_value=date.today())
-    app_time = st.time_input("Time")
-    description = st.text_area("Description")
+with st.form("booking_form", clear_on_submit=True):
+    vehicle_number = st.text_input("Vehicle Number (e.g. TN01AB1234)")
+    parking_date = st.date_input("Parking Date", min_value=date.today())
+    entry_time = st.time_input("Entry Time")
+    slot_number = st.text_input("Slot Number")
 
-    submit = st.form_submit_button("Add Appointment")
+    submit = st.form_submit_button("Book Slot")
 
     if submit:
-        if title.strip() == "":
-            st.error("Title cannot be empty")
+        if vehicle_number.strip() == "" or slot_number.strip() == "":
+            st.error("Vehicle number and slot number are required")
         else:
             cur.execute(
-                "INSERT INTO appointments (user_id, title, date, time, description) VALUES (?, ?, ?, ?, ?)",
+                """
+                INSERT INTO bookings (user_id, vehicle_number, parking_date, entry_time, slot_number)
+                VALUES (?, ?, ?, ?, ?)
+                """,
                 (
                     st.session_state.user_id,
-                    title,
-                    app_date.strftime("%d/%m/%Y"),
-                    app_time.strftime("%H:%M"),
-                    description
+                    vehicle_number.upper(),
+                    parking_date.strftime("%d/%m/%Y"),
+                    entry_time.strftime("%H:%M"),
+                    slot_number.upper()
                 )
             )
             conn.commit()
-            st.success("Appointment added")
+            st.success("Parking slot booked successfully")
 
-# ---------- SHOW APPOINTMENTS ----------
-st.subheader("Your Appointments")
+# ---------- SHOW BOOKINGS ----------
+st.subheader("My Parking Bookings")
 
 cur.execute(
-    "SELECT title, date, time, description FROM appointments WHERE user_id=?",
+    """
+    SELECT vehicle_number, parking_date, entry_time, slot_number
+    FROM bookings
+    WHERE user_id=?
+    """,
     (st.session_state.user_id,)
 )
 
 rows = cur.fetchall()
 
 if not rows:
-    st.info("No appointments added yet")
+    st.info("No parking bookings yet")
 else:
-    df = pd.DataFrame(rows, columns=["Title", "Date", "Time", "Description"])
+    df = pd.DataFrame(
+        rows,
+        columns=["Vehicle Number", "Date", "Entry Time", "Slot"]
+    )
     df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
     st.dataframe(df, hide_index=True)
