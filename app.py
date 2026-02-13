@@ -182,32 +182,26 @@ st.markdown(grid, unsafe_allow_html=True)
 # ---------- BOOK SLOT ----------
 st.subheader("📅 Book Parking Slot")
 
+# --- INPUTS (OUTSIDE FORM → LIVE UPDATES WORK) ---
+booking_date = st.date_input("Date", min_value=date.today())
+entry_time = st.time_input("Entry Time", value=datetime.now().time())
+exit_time = st.time_input("Exit Time")
+
+# --- LIVE OVERNIGHT WARNING ---
+overnight = exit_time <= entry_time
+if overnight:
+    st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
+
+# --- SUBMIT FORM (NO INPUTS INSIDE) ---
 with st.form("booking"):
-    booking_date = st.date_input("Date", min_value=date.today())
-    entry_time = st.time_input("Entry Time", value=datetime.now().time())
-    exit_time = st.time_input("Exit Time")
-
-    # placeholder for live warning
-    warn_box = st.empty()
-
-    # LIVE check (runs every rerun)
-    if exit_time <= entry_time:
-        warn_box.warning(
-            "Exit time is earlier than entry time. Booking will extend to next day."
-        )
-    else:
-        warn_box.empty()
-
     submit = st.form_submit_button("Confirm Booking")
 
     if submit:
         start_dt = datetime.combine(booking_date, entry_time)
         end_dt = datetime.combine(booking_date, exit_time)
 
-        overnight = False
-        if exit_time <= entry_time:
+        if overnight:
             end_dt += timedelta(days=1)
-            overnight = True
 
         cur.execute("""
         SELECT slot_number FROM bookings
