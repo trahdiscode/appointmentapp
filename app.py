@@ -1,105 +1,70 @@
 import streamlit as st
+
+# ---------- PAGE CONFIG (MUST BE FIRST) ----------
+st.set_page_config(page_title="Parking Slot Booking", layout="centered")
+
+from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 import pandas as pd
-from datetime import date
+from datetime import datetime, date, timedelta
 
-# ---------- PAGE CONFIG ----------
-st.set_page_config(page_title="Appointment Manager", layout="centered")
+# ---------- AUTO REFRESH ----------
+st_autorefresh(interval=5000, key="refresh")
 
-# ---------- DARK CARTOON CSS ----------
+st.title("🅿️ College Parking Slot Booking System")
+
+# ---------- DARK MODE CSS ----------
 st.markdown("""
 <style>
-/* App background */
 .stApp {
-    background-color: #0e0e0e;
-    color: #ffffff;
-    font-family: "Comic Sans MS", "Trebuchet MS", sans-serif;
+    background-color: #0f1117;
+    color: #e6e6e6;
+    font-family: "Segoe UI", sans-serif;
 }
-
-/* Headings */
-h1, h2, h3 {
-    color: #ffffff;
-    font-weight: 900;
+section[data-testid="stVerticalBlock"] > div {
+    background-color: #161b22;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 16px;
 }
-
-/* Comic panels / cards */
-div[data-testid="stVerticalBlock"] > div {
-    background-color: #121212;
-    border: 3px solid #ffffff;
-    border-radius: 18px;
-    padding: 20px;
-    margin-bottom: 22px;
-    box-shadow: 6px 6px 0px #000000;
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-width: 600px;
 }
-
-/* Inputs */
-input, textarea {
-    background-color: #0e0e0e !important;
-    color: #ffffff !important;
-    border: 2px solid #ffffff !important;
-    border-radius: 10px !important;
+.slot-box {
+    text-align: center;
+    padding: 14px 0;
+    border-radius: 6px;
+    font-weight: 700;
 }
-
-/* Buttons */
-button {
-    background-color: #0e0e0e !important;
-    color: #ffffff !important;
-    border: 3px solid #ffffff !important;
-    border-radius: 14px !important;
-    font-weight: bold !important;
-    box-shadow: 4px 4px 0px #000000;
-}
-
-button:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px #000000;
-}
-
-/* Tabs */
-button[data-baseweb="tab"] {
-    background-color: #0e0e0e !important;
-    color: #ffffff !important;
-    border: 2px solid #ffffff !important;
-    font-weight: bold;
-}
-
-/* Dataframe */
-.stDataFrame {
-    background-color: #121212;
-    border: 3px solid #ffffff;
-    border-radius: 14px;
-}
-
-/* Success / error text */
-.stAlert {
-    border: 2px solid white;
-}
+.free { background-color: #238636; }
+.busy { background-color: #da3633; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🗓️ Appointment Manager")
-
-# ---------- DATABASE ----------
-conn = sqlite3.connect("app_v2.db", check_same_thread=False)
+# ---------- DATABASE (NEW VERSION) ----------
+conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    vehicle_number TEXT
 )
 """)
 
 cur.execute("""
-CREATE TABLE IF NOT EXISTS appointments (
+CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    date TEXT NOT NULL,
-    time TEXT NOT NULL,
-    description TEXT,
+    slot_number TEXT NOT NULL,
+    start_datetime TEXT NOT NULL,
+    end_datetime TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 )
 """)
@@ -107,57 +72,53 @@ CREATE TABLE IF NOT EXISTS appointments (
 conn.commit()
 
 # ---------- HELPERS ----------
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+def hash_password(p):
+    return hashlib.sha256(p.encode()).hexdigest()
 
-def get_user(username, password):
+def get_user(u, p):
     cur.execute(
-        "SELECT id FROM users WHERE username=? AND password_hash=?",
-        (username, hash_password(password))
+        "SELECT id, vehicle_number FROM users WHERE username=? AND password_hash=?",
+        (u, hash_password(p))
     )
     return cur.fetchone()
 
-def create_user(username, password):
+def create_user(u, p):
     try:
         cur.execute(
             "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (username, hash_password(password))
+            (u, hash_password(p))
         )
         conn.commit()
         return True
     except sqlite3.IntegrityError:
         return False
 
-# ---------- SESSION ----------
-if "user_id" not in st.session_state:
-    st.session_state.user_id = None
+# ---------- SESSION STATE ----------
+for key in ("user_id", "vehicle_number"):
+    if key not in st.session_state:
+        st.session_state[key] = None
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        st.subheader("Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-
+        u = st.text_input("Username")
+        p = st.text_input("Password", type="password")
         if st.button("Login"):
-            user = get_user(username, password)
+            user = get_user(u, p)
             if user:
                 st.session_state.user_id = user[0]
+                st.session_state.vehicle_number = user[1]
                 st.rerun()
             else:
-                st.error("Invalid username or password")
+                st.error("Invalid credentials")
 
     with tab2:
-        st.subheader("Register")
-        username = st.text_input("New Username")
-        password = st.text_input("New Password", type="password")
-
+        u = st.text_input("New Username")
+        p = st.text_input("New Password", type="password")
         if st.button("Register"):
-            if username.strip() == "" or password.strip() == "":
-                st.error("Fields cannot be empty")
-            elif create_user(username, password):
+            if create_user(u, p):
                 st.success("Account created. Login now.")
             else:
                 st.error("Username already exists")
@@ -167,49 +128,90 @@ if st.session_state.user_id is None:
 # ---------- LOGOUT ----------
 if st.button("Logout"):
     st.session_state.user_id = None
+    st.session_state.vehicle_number = None
     st.rerun()
 
-# ---------- ADD APPOINTMENT ----------
-st.subheader("Add Appointment")
+# ---------- VEHICLE NUMBER ----------
+if st.session_state.vehicle_number is None:
+    v = st.text_input("Enter Vehicle Number (one time)")
+    if st.button("Save Vehicle Number"):
+        cur.execute(
+            "UPDATE users SET vehicle_number=? WHERE id=?",
+            (v.upper(), st.session_state.user_id)
+        )
+        conn.commit()
+        st.session_state.vehicle_number = v.upper()
+        st.rerun()
+    st.stop()
 
-with st.form("appointment_form", clear_on_submit=True):
-    title = st.text_input("Title")
-    app_date = st.date_input("Date", min_value=date.today())
-    app_time = st.time_input("Time")
-    description = st.text_area("Description")
+# ---------- PARKING SLOTS ----------
+slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-    submit = st.form_submit_button("Add Appointment")
+# ---------- REAL-TIME AVAILABILITY ----------
+st.subheader("📊 Live Slot Availability (Now)")
 
-    if submit:
-        if title.strip() == "":
-            st.error("Title cannot be empty")
+now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+cur.execute("""
+SELECT slot_number FROM bookings
+WHERE ? BETWEEN start_datetime AND end_datetime
+""", (now,))
+
+occupied = {r[0] for r in cur.fetchall()}
+
+grid = "<div class='slot-grid'>"
+for s in slots:
+    cls = "busy" if s in occupied else "free"
+    grid += f"<div class='slot-box {cls}'>{s}</div>"
+grid += "</div>"
+
+st.markdown(grid, unsafe_allow_html=True)
+
+# ---------- BOOK SLOT ----------
+st.subheader("Book Parking Slot")
+
+with st.form("book"):
+    st.text_input("Vehicle Number", value=st.session_state.vehicle_number, disabled=True)
+    booking_date = st.date_input("Entry Date", min_value=date.today())
+    entry_time = st.time_input("Entry Time", value=datetime.now().time())
+    exit_time = st.time_input("Exit Time")
+    slot = st.selectbox("Slot", slots)
+    ok = st.form_submit_button("Book")
+
+    if ok:
+        start_dt = datetime.combine(booking_date, entry_time)
+        end_dt = datetime.combine(booking_date, exit_time)
+
+        shifted = False
+        if exit_time <= entry_time:
+            end_dt += timedelta(days=1)
+            shifted = True
+
+        cur.execute("""
+        SELECT 1 FROM bookings
+        WHERE slot_number=?
+        AND NOT (end_datetime <= ? OR start_datetime >= ?)
+        """, (
+            slot,
+            start_dt.strftime("%Y-%m-%d %H:%M"),
+            end_dt.strftime("%Y-%m-%d %H:%M")
+        ))
+
+        if cur.fetchone():
+            st.error("Slot is occupied during this time range")
         else:
-            cur.execute(
-                "INSERT INTO appointments (user_id, title, date, time, description) VALUES (?, ?, ?, ?, ?)",
-                (
-                    st.session_state.user_id,
-                    title,
-                    app_date.strftime("%d/%m/%Y"),
-                    app_time.strftime("%H:%M"),
-                    description
-                )
-            )
+            cur.execute("""
+            INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
+            VALUES (?, ?, ?, ?)
+            """, (
+                st.session_state.user_id,
+                slot,
+                start_dt.strftime("%Y-%m-%d %H:%M"),
+                end_dt.strftime("%Y-%m-%d %H:%M")
+            ))
             conn.commit()
-            st.success("Appointment added")
 
-# ---------- SHOW APPOINTMENTS ----------
-st.subheader("Your Appointments")
+            if shifted:
+                st.warning("Exit time is earlier than entry time. Exit date shifted to next day.")
 
-cur.execute(
-    "SELECT title, date, time, description FROM appointments WHERE user_id=?",
-    (st.session_state.user_id,)
-)
-
-rows = cur.fetchall()
-
-if not rows:
-    st.info("No appointments yet")
-else:
-    df = pd.DataFrame(rows, columns=["Title", "Date", "Time", "Description"])
-    df.insert(0, "No", [str(i) for i in range(1, len(df) + 1)])
-    st.dataframe(df, hide_index=True)
+            st.success("Slot booked successfully")
