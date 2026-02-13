@@ -174,14 +174,9 @@ for s in slots:
     else:
         cls, label = "free", "FREE"
 
-    grid += f"""
-    <div class="slot {cls}">
-        {s}<br><small>{label}</small>
-    </div>
-    """
+    grid += f"<div class='slot {cls}'>{s}<br><small>{label}</small></div>"
 grid += "</div>"
 
-# ✅ THIS LINE IS THE FIX
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
