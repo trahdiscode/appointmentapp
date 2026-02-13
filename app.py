@@ -1,18 +1,15 @@
 import streamlit as st
 
 # ---------- PAGE CONFIG (MUST BE FIRST) ----------
-st.set_page_config(page_title="Parking Slot Booking", layout="centered")
+st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 
 from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
-import pandas as pd
 from datetime import datetime, date, timedelta
 
 # ---------- AUTO REFRESH ----------
 st_autorefresh(interval=5000, key="refresh")
-
-st.title("🅿️ College Parking Slot Booking System")
 
 # ---------- DARK MODE CSS ----------
 st.markdown("""
@@ -22,7 +19,7 @@ st.markdown("""
     color: #e6e6e6;
     font-family: "Segoe UI", sans-serif;
 }
-section[data-testid="stVerticalBlock"] > div {
+.block {
     background-color: #161b22;
     padding: 18px;
     border-radius: 10px;
@@ -30,22 +27,24 @@ section[data-testid="stVerticalBlock"] > div {
 }
 .slot-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    max-width: 600px;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 10px;
 }
-.slot-box {
+.slot {
+    padding: 12px 0;
     text-align: center;
-    padding: 14px 0;
     border-radius: 6px;
     font-weight: 700;
+    color: white;
 }
 .free { background-color: #238636; }
 .busy { background-color: #da3633; }
+.mine { background-color: #1f6feb; }
+small { font-weight: 400; opacity: 0.9; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- DATABASE (NEW VERSION) ----------
+# ---------- DATABASE ----------
 conn = sqlite3.connect("parking_v4.db", check_same_thread=False)
 cur = conn.cursor()
 
@@ -100,12 +99,14 @@ for key in ("user_id", "vehicle_number"):
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
+    st.markdown("## 🅿️ Parking Slot Booking")
+
     tab1, tab2 = st.tabs(["Login", "Register"])
 
     with tab1:
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
-        if st.button("Login"):
+        u = st.text_input("Username", key="login_user")
+        p = st.text_input("Password", type="password", key="login_pass")
+        if st.button("Login", use_container_width=True):
             user = get_user(u, p)
             if user:
                 st.session_state.user_id = user[0]
@@ -115,9 +116,9 @@ if st.session_state.user_id is None:
                 st.error("Invalid credentials")
 
     with tab2:
-        u = st.text_input("New Username")
-        p = st.text_input("New Password", type="password")
-        if st.button("Register"):
+        u = st.text_input("New Username", key="reg_user")
+        p = st.text_input("New Password", type="password", key="reg_pass")
+        if st.button("Register", use_container_width=True):
             if create_user(u, p):
                 st.success("Account created. Login now.")
             else:
@@ -125,16 +126,24 @@ if st.session_state.user_id is None:
 
     st.stop()
 
-# ---------- LOGOUT ----------
-if st.button("Logout"):
-    st.session_state.user_id = None
-    st.session_state.vehicle_number = None
-    st.rerun()
+# ---------- HEADER ----------
+with st.container():
+    col1, col2, col3 = st.columns([6, 3, 1])
+    with col1:
+        st.markdown("## 🅿️ Parking Slot Booking")
+    with col2:
+        st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
+    with col3:
+        if st.button("Logout", use_container_width=True):
+            st.session_state.user_id = None
+            st.session_state.vehicle_number = None
+            st.rerun()
 
 # ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
-    v = st.text_input("Enter Vehicle Number (one time)")
-    if st.button("Save Vehicle Number"):
+    st.markdown("### 🚘 Register Vehicle Number")
+    v = st.text_input("Vehicle Number")
+    if st.button("Save Vehicle Number", type="primary"):
         cur.execute(
             "UPDATE users SET vehicle_number=? WHERE id=?",
             (v.upper(), st.session_state.user_id)
@@ -147,58 +156,74 @@ if st.session_state.vehicle_number is None:
 # ---------- PARKING SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# ---------- REAL-TIME AVAILABILITY ----------
-st.subheader("📊 Live Slot Availability (Now)")
-
+# ---------- LIVE AVAILABILITY ----------
+st.markdown("### 📊 Live Slot Availability (Now)")
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 cur.execute("""
 SELECT slot_number FROM bookings
 WHERE ? BETWEEN start_datetime AND end_datetime
 """, (now,))
-
 occupied = {r[0] for r in cur.fetchall()}
+
+cur.execute("""
+SELECT slot_number FROM bookings
+WHERE user_id=? AND ? BETWEEN start_datetime AND end_datetime
+""", (st.session_state.user_id, now))
+mine = {r[0] for r in cur.fetchall()}
 
 grid = "<div class='slot-grid'>"
 for s in slots:
-    cls = "busy" if s in occupied else "free"
-    grid += f"<div class='slot-box {cls}'>{s}</div>"
+    if s in mine:
+        cls, label = "mine", "YOURS"
+    elif s in occupied:
+        cls, label = "busy", "BUSY"
+    else:
+        cls, label = "free", "FREE"
+
+    grid += f"""
+    <div class="slot {cls}">
+        {s}<br><small>{label}</small>
+    </div>
+    """
 grid += "</div>"
 
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-st.subheader("Book Parking Slot")
+st.markdown("### 📅 Book Parking Slot")
 
-with st.form("book"):
-    st.text_input("Vehicle Number", value=st.session_state.vehicle_number, disabled=True)
-    booking_date = st.date_input("Entry Date", min_value=date.today())
+with st.form("booking"):
+    booking_date = st.date_input("Date", min_value=date.today())
     entry_time = st.time_input("Entry Time", value=datetime.now().time())
     exit_time = st.time_input("Exit Time")
-    slot = st.selectbox("Slot", slots)
-    ok = st.form_submit_button("Book")
 
-    if ok:
-        start_dt = datetime.combine(booking_date, entry_time)
-        end_dt = datetime.combine(booking_date, exit_time)
+    start_dt = datetime.combine(booking_date, entry_time)
+    end_dt = datetime.combine(booking_date, exit_time)
 
-        shifted = False
-        if exit_time <= entry_time:
-            end_dt += timedelta(days=1)
-            shifted = True
+    overnight = False
+    if exit_time <= entry_time:
+        end_dt += timedelta(days=1)
+        overnight = True
+        st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
 
-        cur.execute("""
-        SELECT 1 FROM bookings
-        WHERE slot_number=?
-        AND NOT (end_datetime <= ? OR start_datetime >= ?)
-        """, (
-            slot,
-            start_dt.strftime("%Y-%m-%d %H:%M"),
-            end_dt.strftime("%Y-%m-%d %H:%M")
-        ))
+    cur.execute("""
+    SELECT slot_number FROM bookings
+    WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
+    """, (
+        start_dt.strftime("%Y-%m-%d %H:%M"),
+        end_dt.strftime("%Y-%m-%d %H:%M")
+    ))
+    blocked = {r[0] for r in cur.fetchall()}
+    available = [s for s in slots if s not in blocked]
 
-        if cur.fetchone():
-            st.error("Slot is occupied during this time range")
+    slot = st.selectbox("Available Slots", available)
+
+    submit = st.form_submit_button("Confirm Booking")
+
+    if submit:
+        if not available:
+            st.error("No slots available for selected time")
         else:
             cur.execute("""
             INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
@@ -210,8 +235,4 @@ with st.form("book"):
                 end_dt.strftime("%Y-%m-%d %H:%M")
             ))
             conn.commit()
-
-            if shifted:
-                st.warning("Exit time is earlier than entry time. Exit date shifted to next day.")
-
             st.success("Slot booked successfully")
