@@ -180,45 +180,50 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-st.subheader("📅 Book Parking Slot")
-
 with st.form("booking"):
     booking_date = st.date_input("Date", min_value=date.today())
     entry_time = st.time_input("Entry Time", value=datetime.now().time())
     exit_time = st.time_input("Exit Time")
 
-    start_dt = datetime.combine(booking_date, entry_time)
-    end_dt = datetime.combine(booking_date, exit_time)
-
-    if exit_time <= entry_time:
-        end_dt += timedelta(days=1)
-        st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
-
-    cur.execute("""
-    SELECT slot_number FROM bookings
-    WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
-    """, (
-        start_dt.strftime("%Y-%m-%d %H:%M"),
-        end_dt.strftime("%Y-%m-%d %H:%M")
-    ))
-    blocked = {r[0] for r in cur.fetchall()}
-    available = [s for s in slots if s not in blocked]
-
-    slot = st.selectbox("Available Slots", available)
     submit = st.form_submit_button("Confirm Booking")
 
     if submit:
+        start_dt = datetime.combine(booking_date, entry_time)
+        end_dt = datetime.combine(booking_date, exit_time)
+
+        overnight = False
+        if exit_time <= entry_time:
+            end_dt += timedelta(days=1)
+            overnight = True
+
+        cur.execute("""
+        SELECT slot_number FROM bookings
+        WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
+        """, (
+            start_dt.strftime("%Y-%m-%d %H:%M"),
+            end_dt.strftime("%Y-%m-%d %H:%M")
+        ))
+        blocked = {r[0] for r in cur.fetchall()}
+        available = [s for s in slots if s not in blocked]
+
         if not available:
             st.error("No slots available for selected time")
-        else:
-            cur.execute("""
-            INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
-            VALUES (?, ?, ?, ?)
-            """, (
-                st.session_state.user_id,
-                slot,
-                start_dt.strftime("%Y-%m-%d %H:%M"),
-                end_dt.strftime("%Y-%m-%d %H:%M")
-            ))
-            conn.commit()
-            st.success("Slot booked successfully")
+            st.stop()
+
+        slot = st.selectbox("Available Slots", available)
+
+        cur.execute("""
+        INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
+        VALUES (?, ?, ?, ?)
+        """, (
+            st.session_state.user_id,
+            slot,
+            start_dt.strftime("%Y-%m-%d %H:%M"),
+            end_dt.strftime("%Y-%m-%d %H:%M")
+        ))
+        conn.commit()
+
+        if overnight:
+            st.warning("Exit time was earlier than entry time. Booking extended to next day.")
+
+        st.success("Slot booked successfully")
