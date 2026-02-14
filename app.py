@@ -192,18 +192,37 @@ active = cur.fetchone()
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    if active:
+   if active:
         slot, start, end = active
+    
         end_time = datetime.strptime(end, "%Y-%m-%d %H:%M")
         remaining = end_time - now_dt
-
+    
         st.success(f"""
-        🚗 **Currently Parked**
-
-        **Slot:** {slot}  
-        **Until:** {end_time.strftime("%H:%M")}  
-        **Time Remaining:** {str(remaining).split('.')[0]}
-        """)
+    🚗 **Currently Parked**
+    
+    **Slot:** {slot}  
+    **Until:** {end_time.strftime("%H:%M")}  
+    **Time Remaining:** {str(remaining).split('.')[0]}
+    """)
+    
+        # 🔴 Cancel Booking Button
+        if st.button("Cancel Booking", use_container_width=True):
+    
+            cur.execute("""
+            DELETE FROM bookings
+            WHERE user_id=? AND slot_number=? AND start_datetime=? AND end_datetime=?
+            """, (
+                st.session_state.user_id,
+                slot,
+                start,
+                end
+            ))
+    
+            conn.commit()
+    
+            st.success("Booking cancelled successfully.")
+            st.rerun()
     else:
         st.info("🟢 No active parking session")
 
