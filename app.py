@@ -110,6 +110,13 @@ for k in ("user_id", "vehicle_number"):
     if k not in st.session_state:
         st.session_state[k] = None
 
+import time
+
+if "error_message" not in st.session_state:
+    st.session_state.error_message = None
+
+if "error_time" not in st.session_state:
+    st.session_state.error_time = None
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
     st.markdown("## 🅿️ Parking Slot Booking")
@@ -242,6 +249,14 @@ st.markdown(grid, unsafe_allow_html=True)
 # ---------- BOOK SLOT ----------
 st.divider()
 st.markdown("<div class='section-title'>Book Parking</div>", unsafe_allow_html=True)
+if st.session_state.error_message:
+    elapsed = time.time() - st.session_state.error_time
+
+    if elapsed < 7:
+        st.error(st.session_state.error_message)
+    else:
+        st.session_state.error_message = None
+        st.session_state.error_time = None
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -300,7 +315,8 @@ if st.button("Confirm Booking", use_container_width=True):
     ))
 
     if cur.fetchone():
-        st.error("You already have a booking during this time.")
+        st.session_state.error_message = "You already have a booking during this time."
+        st.session_state.error_time = time.time()
     else:
         cur.execute("""
         INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
