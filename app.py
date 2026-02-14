@@ -185,9 +185,9 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
+# ---------- BOOK SLOT ----------
 st.subheader("📅 Book Parking Slot")
 
-# Stable default times (do NOT reset every rerun)
 if "default_entry_time" not in st.session_state:
     st.session_state.default_entry_time = datetime.now().replace(second=0, microsecond=0).time()
 
@@ -212,13 +212,20 @@ with st.form("booking"):
         key="exit_time"
     )
 
+    # Create datetime objects
     start_dt = datetime.combine(booking_date, entry_time)
     end_dt = datetime.combine(booking_date, exit_time)
 
+    # SHIFT LOGIC
+    shifted = False
     if exit_time <= entry_time:
         end_dt += timedelta(days=1)
+        shifted = True
+
+    if shifted:
         st.warning("Exit time is earlier than entry time. Booking extends to next day.")
 
+    # Check overlapping bookings
     cur.execute("""
     SELECT slot_number FROM bookings
     WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
@@ -252,10 +259,11 @@ with st.form("booking"):
 
         st.success("Slot booked successfully")
 
-        # Reset default times after booking
-        st.session_state.default_entry_time = datetime.now().time()
+        # Reset times after booking
+        st.session_state.default_entry_time = datetime.now().replace(second=0, microsecond=0).time()
         st.session_state.default_exit_time = (
             datetime.now() + timedelta(hours=1)
-        ).time()
+        ).replace(second=0, microsecond=0).time()
 
+        st.rerun()
         st.rerun()
