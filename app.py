@@ -167,7 +167,8 @@ if st.session_state.vehicle_number is None:
 # ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-st.markdown("## 🅿️ Parking Dashboard")
+st.markdown("<div class='main-title'>Parking Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtle-line'></div>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -208,7 +209,7 @@ with col2:
     
 # ---------- LIVE AVAILABILITY ----------
 st.divider()
-st.markdown("### 📊 Live Slot Overview")
+st.markdown("<div class='section-title'>Live Slot Overview</div>", unsafe_allow_html=True)
 st.caption("Real-time availability")
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -241,8 +242,7 @@ st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
 st.divider()
-st.markdown("### 📅 Book Parking")
-
+st.markdown("<div class='section-title'>Book Parking</div>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns(3)
 
 with col1:
