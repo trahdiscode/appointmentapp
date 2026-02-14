@@ -36,6 +36,25 @@ st.markdown("""
 .busy { background-color: #da3633; }
 .mine { background-color: #1f6feb; }
 small { font-weight: 400; opacity: 0.9; }
+
+.main-title {
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.subtle-line {
+    height: 2px;
+    background: linear-gradient(90deg, #1f6feb, transparent);
+    margin-bottom: 20px;
+}
 </style>
 """, unsafe_allow_html=True)
 
