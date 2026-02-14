@@ -140,16 +140,15 @@ if st.session_state.user_id is None:
     st.stop()
 
 # ---------- HEADER ----------
-col1, col2, col3 = st.columns([6, 3, 1])
-with col1:
-    st.markdown("## 🅿️ Parking Slot Booking")
-with col2:
-    st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
-with col3:
-    if st.button("Logout", use_container_width=True):
-        st.session_state.user_id = None
-        st.session_state.vehicle_number = None
-        st.rerun()
+st.markdown("""
+<div style='font-size:38px; font-weight:800;'>
+🅿 Parking Slot Booking
+</div>
+<div style='font-size:16px; opacity:0.6; margin-bottom:20px;'>
+Faculty Parking Management System
+</div>
+<hr style='border:1px solid #1f6feb; opacity:0.3;'>
+""", unsafe_allow_html=True)
 
 # ---------- VEHICLE NUMBER ----------
 if st.session_state.vehicle_number is None:
