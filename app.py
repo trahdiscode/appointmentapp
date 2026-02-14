@@ -221,29 +221,34 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-st.subheader("📅 Book Parking Slot")
+st.divider()
+st.markdown("### 📅 Book Parking")
 
-booking_date = st.date_input("Date", min_value=date.today())
+col1, col2, col3 = st.columns(3)
 
-entry_time = st.time_input(
-    "Entry Time",
-    value=datetime.now().replace(second=0, microsecond=0).time()
-)
+with col1:
+    booking_date = st.date_input("Date", min_value=date.today())
 
-exit_time = st.time_input("Exit Time")
+with col2:
+    entry_time = st.time_input(
+        "Entry Time",
+        value=datetime.now().replace(second=0, microsecond=0).time()
+    )
+
+with col3:
+    exit_time = st.time_input("Exit Time")
 
 start_dt = datetime.combine(booking_date, entry_time)
 end_dt = datetime.combine(booking_date, exit_time)
 
-next_day = False
+overnight = False
 if exit_time <= entry_time:
-    next_day = True
-    st.warning("Exit time is earlier than entry time. Booking will extend to next day.")
+    overnight = True
+    st.caption("Overnight booking")
 
-if next_day:
+if overnight:
     end_dt += timedelta(days=1)
 
-# Check blocked slots dynamically
 cur.execute("""
 SELECT slot_number FROM bookings
 WHERE NOT (end_datetime <= ? OR start_datetime >= ?)
@@ -258,16 +263,14 @@ available = [s for s in slots if s not in blocked]
 if available:
     slot = st.selectbox("Available Slots", available)
 else:
-    st.error("No slots available for selected time")
+    st.error("No slots available")
     slot = None
 
-if st.button("Confirm Booking"):
+if st.button("Confirm Booking", use_container_width=True):
 
     if slot is None:
-        st.error("No slot selected")
         st.stop()
 
-    # Check overlapping booking for user
     cur.execute("""
     SELECT id FROM bookings
     WHERE user_id=?
@@ -278,10 +281,8 @@ if st.button("Confirm Booking"):
         end_dt.strftime("%Y-%m-%d %H:%M")
     ))
 
-    existing = cur.fetchone()
-
-    if existing:
-        st.error("You already have a booking during this time. Only one car allowed.")
+    if cur.fetchone():
+        st.error("You already have a booking during this time.")
     else:
         cur.execute("""
         INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime)
