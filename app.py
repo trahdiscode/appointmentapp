@@ -36,7 +36,7 @@ st.markdown("""
     background-color: var(--color-bg);
     font-family: var(--font-family);
     color: var(--color-text-primary); /* Ensure base text color */
-    padding: var(--spacing-unit); /* Add overall padding to the app */
+    padding: 0; /* Remove default app padding to control it via main block-container */
 }
 .main.block-container {
     padding-top: var(--spacing-unit);
@@ -58,7 +58,7 @@ h2 {
     font-weight: 500; 
     font-size: 1.5rem; /* Adjusted for better hierarchy */
     color: var(--color-text-primary); /* Main headers primary color */
-    margin-top: calc(2 * var(--spacing-unit)); 
+    margin-top: calc(2 * var(--spacing-unit)); /* More space above major sections */
     margin-bottom: 1rem; 
 }
 h3 { 
@@ -293,12 +293,37 @@ hr {
     margin-bottom: calc(1.5 * var(--spacing-unit));
 }
 
+/* Custom styling for the main title and logout button alignment */
+.st-emotion-cache-18ni7ap.e1fqkh3o5 { /* Target the Streamlit main content div */
+    width: 100%;
+}
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem; /* Add some padding below the header area */
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--spacing-unit); /* Space below the main header line */
+}
+.header-title {
+    font-weight: 600;
+    font-size: 2rem;
+    color: var(--color-text-primary);
+    margin: 0; /* Remove default margin */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.header-title.emoji {
+    font-size: 2rem; /* Keep emoji size consistent with title */
+}
+
 /* --- Mobile-specific adjustments --- */
 @media (max-width: 768px) { /* Tablets and smaller */
-   .stApp {
+  .stApp {
         padding: 1rem; /* Less overall padding on mobile */
     }
-   .main.block-container {
+  .main.block-container {
         padding: 1rem;
     }
     h1 { font-size: 1.5rem; margin-bottom: 1rem; }
@@ -307,10 +332,10 @@ hr {
     h4 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.6rem; }
 
     /* Adjust padding and font size for inputs on mobile */
- .stTextInput > div > div > input,
- .stDateInput > div > div > input,
- .stTimeInput > div > div > input,
- .stSelectbox > div > div > div > div {
+.stTextInput > div > div > input,
+.stDateInput > div > div > input,
+.stTimeInput > div > div > input,
+.stSelectbox > div > div > div > div {
         padding: 0.6rem 0.8rem;
         font-size: 0.95rem;
     }
@@ -322,56 +347,58 @@ hr {
     }
 
     /* Make columns stack on small screens for better readability */
- .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns (Title & Logout) */
- .stApp > div > div:nth-child(1) > div:nth-child(3) > div { /* Targeting dashboard columns */
-        flex-direction: column;
-        gap: 1rem;
-    }
-    /* Ensure Logout button gets proper styling when stacked */
-   .stApp > div > div:nth-child(1) > div:nth-child(2) > div:last-child {
-        width: 100%;
-        margin-top: 1rem;
-    }
-
+   /* Removed previous column styling for main header, using custom header-container now */
+    
     /* Full width primary buttons */
- .stButton > button.primary {
+.stButton > button.primary {
         width: 100%;
         font-size: 0.95rem;
         padding: 0.6rem 1rem;
     }
     /* Secondary buttons should also adapt */
-   .stButton > button.secondary {
+  .stButton > button.secondary {
         width: 100%;
         font-size: 0.85rem;
         padding: 0.5rem 0.8rem;
     }
 
     /* Slot grid adjustments for mobile */
- .stHorizontalBlock > div {
+.stHorizontalBlock > div {
         flex-basis: calc(33.333% - 0.75rem); /* 3 slots per row */
         max-width: calc(33.333% - 0.75rem);
     }
- .stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
+.stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
         margin-right: 0;
     }
 
     /* Manage booking item columns to stack */
-   .manage-booking-item {
+  .manage-booking-item {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
         padding: 0.75rem;
     }
-   .manage-booking-item > div:first-child {
+  .manage-booking-item > div:first-child {
         min-width: unset;
         width: 100%;
     }
-   .manage-booking-item > div:nth-child(2) {
+  .manage-booking-item > div:nth-child(2) {
         width: 100%;
     }
-   .manage-booking-item > div:last-child {
+  .manage-booking-item > div:last-child {
         width: 100%;
         text-align: left;
+    }
+   .header-container { /* Ensure header container also adapts */
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+   .header-title {
+        width: 100%; /* Make title take full width */
+        font-size: 1.8rem;
     }
 }
 
@@ -379,18 +406,24 @@ hr {
     h1 { font-size: 1.3rem; margin-bottom: 0.75rem; }
     h2 { margin-top: 1rem; margin-bottom: 0.6rem; }
 
- .stButton button {
+.stButton button {
         height: 50px; /* Slightly smaller height for very small screens */
         font-size: 1rem;
     }
 
     /* Even fewer slots per row for tiny screens */
- .stHorizontalBlock > div {
+.stHorizontalBlock > div {
         flex-basis: calc(50% - 0.75rem); /* 2 slots per row */
         max-width: calc(50% - 0.75rem);
     }
- .stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
+.stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
         margin-right: 0;
+    }
+   .header-title {
+        font-size: 1.5rem;
+    }
+   .header-title.emoji {
+        font-size: 1.5rem;
     }
 }
 </style>
@@ -441,29 +474,18 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
-col1, col2 = st.columns([8, 1])
-with col1: st.title("🅿️ Parking Slot Booking")
-with col2:
-    # Use a transparent background for logout button to blend better
-    st.markdown("""
-    <style>
-   .stButton button[kind="secondaryFormSubmit"] {
-        background-color: var(--color-bg-secondary); /* Match card background */
-        border: 1px solid var(--color-border);
-        color: var(--color-text-secondary);
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-    }
-   .stButton button[kind="secondaryFormSubmit"]:hover {
-        background-color: var(--color-accent);
-        border-color: var(--color-accent);
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    if st.button("Logout", type="secondary"): # Changed to secondary type for styling
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
+
+# Custom header for title and logout button
+st.markdown('<div class="header-container">', unsafe_allow_html=True)
+st.markdown('<div class="header-title"><span class="emoji">🅿️</span> Parking Slot Booking</div>', unsafe_allow_html=True)
+if st.button("Logout", type="secondary"):
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Moved the horizontal line from st.title to the custom header
+# and removed the st.title which has the default line
+
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
     st.info("Please enter your vehicle number to proceed. This is a one-time requirement.", icon="🚗")
     v = st.text_input("Enter Vehicle Number", placeholder="e.g., TN01 AB1234") # Added placeholder
@@ -474,7 +496,7 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
             cur.execute("UPDATE users SET vehicle_number=? WHERE id=?", (v.upper(), st.session_state.user_id)); conn.commit(); st.session_state.vehicle_number = v.upper(); st.rerun()
     st.stop()
 
-st.header("Dashboard Overview")
+st.subheader("Dashboard Overview") # Changed to subheader for consistent hierarchy
 col1, col2 = st.columns(2)
 now_dt = datetime.now()
 user_has_active_or_future_booking = False
