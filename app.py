@@ -11,55 +11,55 @@ from datetime import datetime, date, timedelta
 # ---------- AUTO REFRESH ----------
 # st_autorefresh(interval=5000, key="refresh")
 
-# ---------- BRIGHT & PROFESSIONAL UI STYLESHEET (LIGHT THEME) ----------
+# ---------- PROFESSIONAL UI STYLESHEET (V3 - RELIABLE TARGETING) ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter - Clean & Professional */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* --- Root Variables for a Cohesive LIGHT THEME Design System --- */
+/* --- Root Variables for a Cohesive Design System --- */
 :root {
     --font-family: 'Inter', sans-serif;
-    --color-bg: #F8F9FA; /* Light gray background */
-    --color-bg-secondary: #FFFFFF; /* White for cards */
-    --color-text-primary: #212529; /* Dark text for readability */
-    --color-text-secondary: #6C757D; /* Lighter gray for secondary text */
-    --color-border: #DEE2E6;
-    --color-accent: #0D6EFD; /* A vibrant, professional blue */
-    --color-accent-hover: #0B5ED7;
+    --color-bg: #0E1117;
+    --color-bg-secondary: #1C2028;
+    --color-text-primary: #FAFAFA;
+    --color-text-secondary: #AFB8C1;
+    --color-border: #303742;
+    --color-accent: #3A77E0;
     --border-radius: 0.5rem;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 /* --- Base App Styling --- */
 .stApp {
     background-color: var(--color-bg);
     font-family: var(--font-family);
-    color: var(--color-text-primary);
 }
 
-/* --- Typography & Headings --- */
-h1, h2, h3 {
-    color: var(--color-text-primary);
-    font-family: var(--font-family);
-}
+/* --- Typography & Headings (Directly targeting Streamlit's output) --- */
 h1 {
-    font-weight: 700;
+    font-family: var(--font-family);
+    font-weight: 600;
     font-size: 1.8rem;
+    color: var(--color-text-primary);
     padding-bottom: 0.5rem;
     margin-bottom: 1rem;
     border-bottom: 1px solid var(--color-border);
 }
+
 h2 {
+    font-family: var(--font-family);
     font-weight: 600;
     font-size: 1.4rem;
+    color: var(--color-text-secondary);
     margin-top: 2.5rem;
     margin-bottom: 1rem;
 }
+
 h3 {
+    font-family: var(--font-family);
     font-weight: 600;
     font-size: 1.15rem;
+    color: var(--color-text-primary);
     margin-top: 2rem;
     margin-bottom: 0.5rem;
 }
@@ -69,7 +69,7 @@ h3 {
 .stDateInput > div > div > input,
 .stTimeInput > div > div > input,
 .stSelectbox > div > div > button {
-    background-color: var(--color-bg-secondary);
+    background-color: var(--color-bg);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
@@ -80,31 +80,25 @@ h3 {
 .stTimeInput > div > div > input:focus,
 .stSelectbox > div > div > button:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 0 0 2px rgba(58, 119, 224, 0.3);
     outline: none;
 }
 
 .stButton > button {
     font-weight: 500;
     background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
-    transition: all 0.2s;
+    transition: background-color 0.2s;
 }
 .stButton > button:hover {
-    background-color: #F8F9FA;
-    border-color: #BDBDBD;
+    background-color: #262B34;
 }
 
 .stButton > button.primary { /* Primary "Confirm" button */
     background-color: var(--color-accent);
     border-color: var(--color-accent);
     color: white;
-}
-.stButton > button.primary:hover {
-    background-color: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
 }
 
 /* --- Card Styling for Metric & Status --- */
@@ -115,21 +109,11 @@ div[data-testid="stAlert"] {
     border-radius: var(--border-radius);
     padding: 1.5rem;
     height: 100%;
-    box-shadow: var(--shadow-md);
 }
 
-/* Style for the "Currently Parked" success alert */
 div[data-testid="stAlert"][data-baseweb="alert-success"] {
-    background-color: #D1E7DD;
-    border-color: #A3CFBB;
-    color: #0A3622;
-}
-
-/* Style for the "No Session" info alert */
-div[data-testid="stAlert"][data-baseweb="alert-info"] {
-    background-color: #CFF4FC;
-    border-color: #9EEAF9;
-    color: #055160;
+    background-color: #112B1E; /* Dark Green background for success card */
+    border-color: #255B39;
 }
 
 /* --- Slot Grid --- */
@@ -146,11 +130,17 @@ div[data-testid="stAlert"][data-baseweb="alert-info"] {
     border-radius: var(--border-radius);
     font-weight: 600;
     color: white;
-    border: 1px solid rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
 }
-.free { background-color: #198754; } /* Bright Green */
-.busy { background-color: #DC3545; } /* Bright Red */
-.mine { background-color: #0D6EFD; } /* Bright Blue */
+.slot:hover {
+    transform: translateY(-2px); /* Add a subtle hover effect */
+}
+
+/* ---!!! THIS IS THE ONLY CHANGE: BRIGHTER SLOT COLORS!!! --- */
+.free { background-color: #22c55e; } /* VIBRANT GREEN */
+.busy { background-color: #ef4444; } /* VIBRANT RED */
+.mine { background-color: #3b82f6; } /* VIBRANT BLUE */
+
 small {
     font-weight: 500;
     font-size: 0.75rem;
@@ -243,9 +233,9 @@ with col1:
         **Slot:** {slot}\n
         **Until:** {end_time.strftime("%I:%M %p")}\n
         **Time Remaining:** {str(remaining).split('.')[0]}
-        """, icon="🚗")
+        """)
     else:
-        st.info("No active parking session.", icon="🟢")
+        st.info("No active parking session.")
 
 with col2:
     cur.execute("SELECT COUNT(*) FROM bookings")
