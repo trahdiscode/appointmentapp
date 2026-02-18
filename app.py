@@ -57,6 +57,14 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
     box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     outline: none;
 }
+.stButton > button {
+    font-weight: 500;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s ease-in-out;
+}
+.stButton > button:hover { background-color: #242424; }
 .stButton > button.primary { background-color: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
 .stButton > button.primary:hover { background-color: #5A9EE8; border-color: #5A9EE8; }
 
@@ -71,15 +79,11 @@ div[data-testid="stMetric"], div[data-testid="stAlert"] {
 div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); }
 div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); }
 
-/* --- Styling for st.button used as slots --- */
-div[data-testid="stHorizontalBlock"] {
-    gap: 0.75rem;
-}
-.stButton button {
-    width: 100%;
-    height: 80px;
+/* --- Clickable Slot Grid Styling --- */
+.slot-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.75rem; margin-top: 1rem; margin-bottom: 2rem; }
+.slot-link { text-decoration: none; }
+.slot {
     padding: 1rem 0;
-    margin: 0;
     text-align: center;
     border-radius: var(--border-radius);
     font-weight: 500;
@@ -88,34 +92,15 @@ div[data-testid="stHorizontalBlock"] {
     border: 1px solid var(--color-border);
     transition: border-color 0.2s ease;
 }
-/* This targets the markdown content inside the button */
-.stButton button div[data-testid="stMarkdownContainer"] p {
-    font-family: var(--font-family);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
+.slot.clickable:hover { border-color: var(--color-text-secondary); cursor: pointer; }
+.slot.free { color: #50A86E; border-left: 3px solid #50A86E; }
+.slot.busy { color: #B9535A; border-left: 3px solid #B9535A; background-color: #1A1A1A; }
+.slot.yours { color: #A0A0A0; border-left: 3px solid #A0A0A0; }
+.slot.selected {
+    border: 2px solid var(--color-accent)!important;
+    background-color: rgba(74, 144, 226, 0.1);
 }
-.stButton button:hover {
-    border-color: var(--color-text-secondary);
-}
-.stButton button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #1A1A1A;
-}
-.stButton button:disabled:hover {
-    border-color: var(--color-border);
-}
-.stButton button small {
-    font-weight: 400;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-secondary);
-}
+.slot small { font-weight: 400; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
 
 </style>
 """, unsafe_allow_html=True)
@@ -140,8 +125,16 @@ def create_user(u, p):
     except sqlite3.IntegrityError: return False
 
 # ---------- SESSION STATE INITIALIZATION ----------
-if 'selected_slot' not in st.session_state:
-    st.session_state.selected_slot = None
+# Use query params to set the selected slot
+selected_slot_from_query = st.query_params.get("slot")
+if "selected_slot" not in st.session_state:
+    st.session_state.selected_slot = selected_slot_from_query
+elif selected_slot_from_query:
+    if st.session_state.selected_slot == selected_slot_from_query:
+         st.session_state.selected_slot = None # Toggle off
+    else:
+         st.session_state.selected_slot = selected_slot_from_query
+    st.query_params.clear()
 
 # ---------- AUTH PAGE (BUG FIX) ----------
 if 'user_id' not in st.session_state or st.session_state.user_id is None:
@@ -156,16 +149,13 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
                 st.rerun()
-            else:
-                st.error("Invalid credentials")
+            else: st.error("Invalid credentials")
     with tab2:
         u = st.text_input("New Username", key="reg_user")
         p = st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
-            if create_user(u, p):
-                st.success("Account created. Login now.")
-            else:
-                st.error("Username already exists")
+            if create_user(u, p): st.success("Account created. Login now.")
+            else: st.error("Username already exists")
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
@@ -204,56 +194,45 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-# --- CLICKABLE LIVE AVAILABILITY GRID ---
+# --- CLICKABLE LIVE AVAILABILITY GRID (Using HTML for visuals) ---
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
 my_active_slot = next((s[0] for s in cur.execute("SELECT slot_number FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, datetime.now().strftime("%Y-%m-%d %H:%M")))), None)
 
-# Function to handle slot selection
-def handle_slot_click(slot_name):
-    if st.session_state.selected_slot == slot_name:
-        st.session_state.selected_slot = None
+grid_html = "<div class='slot-grid'>"
+for s in slots:
+    is_blocked = s in blocked_for_selection
+    is_selected = s == st.session_state.selected_slot
+    is_mine_now = s == my_active_slot
+
+    # Determine class and label
+    if is_mine_now:
+        label, status_class = "YOURS", "yours"
+    elif is_blocked:
+        label, status_class = "BUSY", "busy"
     else:
-        st.session_state.selected_slot = slot_name
+        label, status_class = "FREE", "free clickable"
 
-# Inject CSS for the selected button
-if st.session_state.selected_slot:
-    st.markdown(f"""
-        <style>
-           .stButton button[data-testid*="st.button"]:has(p:contains("{st.session_state.selected_slot}")) {{
-                border: 2px solid var(--color-accent);
-                background-color: rgba(74, 144, 226, 0.1);
-            }}
-        </style>
-    """, unsafe_allow_html=True)
+    if is_selected and not is_blocked:
+        status_class += " selected"
 
-# Display the grid
-num_columns = 10
-rows = [slots[i:i + num_columns] for i in range(0, len(slots), num_columns)]
-for row in rows:
-    cols = st.columns(num_columns)
-    for i, s in enumerate(row):
-        with cols[i]:
-            is_blocked = s in blocked_for_selection
-            is_mine_now = s == my_active_slot
-            
-            if is_mine_now:
-                label = f"{s}<br><small>YOURS</small>"
-                disabled = True
-            elif is_blocked:
-                label = f"{s}<br><small>BUSY</small>"
-                disabled = True
-            else:
-                label = f"{s}<br><small style='color:#50A86E;'>FREE</small>"
-                disabled = False
+    # Build the HTML for the slot
+    slot_div = f"<div class='slot {status_class}'>{s}<br><small>{label}</small></div>"
+    
+    # If the slot is not blocked, wrap it in a clickable link
+    if not is_blocked:
+        grid_html += f"<a href='?slot={s}' class='slot-link'>{slot_div}</a>"
+    else:
+        grid_html += slot_div
 
-            st.button(label, on_click=handle_slot_click, args=(s,), disabled=disabled, key=f"slot_{s}", use_container_width=True, unsafe_allow_html=True)
+grid_html += "</div>"
+st.markdown(grid_html, unsafe_allow_html=True)
 
 # --- CONFIRMATION SECTION ---
 if st.session_state.selected_slot:
     if st.session_state.selected_slot in blocked_for_selection:
-        st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
+        st.error(f"Slot {st.session_state.selected_slot} is no longer available. The grid has updated.", icon="🚫")
         st.session_state.selected_slot = None
         st.rerun()
     else:
