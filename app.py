@@ -14,7 +14,7 @@ st_autorefresh(interval=1000, key="refresh")
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* --- Root Variables --- */
 :root {
@@ -149,10 +149,10 @@ div[data-testid="stHorizontalBlock"] {
     h3 { font-size: 1rem; }
 
     /* Adjust padding and font size for inputs on mobile */
-  .stTextInput > div > div > input,
-  .stDateInput > div > div > input,
-  .stTimeInput > div > div > input,
-  .stSelectbox > div > div > div > div {
+ .stTextInput > div > div > input,
+ .stDateInput > div > div > input,
+ .stTimeInput > div > div > input,
+ .stSelectbox > div > div > div > div {
         padding: 0.6rem 0.8rem;
         font-size: 0.95rem;
     }
@@ -163,23 +163,23 @@ div[data-testid="stHorizontalBlock"] {
     }
 
     /* Make columns stack on small screens for better readability */
-  .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns */
-  .stApp > div > div:nth-child(1) > div:nth-child(3) > div { /* Targeting dashboard columns */
+ .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns */
+ .stApp > div > div:nth-child(1) > div:nth-child(3) > div { /* Targeting dashboard columns */
         flex-direction: column;
         gap: 1rem;
     }
 
     /* Full width buttons for primary actions */
-  .stButton > button.primary {
+ .stButton > button.primary {
         width: 100%;
     }
 
     /* Slot grid adjustments for mobile */
-  .stHorizontalBlock > div {
+ .stHorizontalBlock > div {
         flex-basis: calc(33.333% - 0.75rem); /* 3 slots per row */
         max-width: calc(33.333% - 0.75rem);
     }
-  .stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
+ .stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
         margin-right: 0;
     }
 }
@@ -188,17 +188,17 @@ div[data-testid="stHorizontalBlock"] {
     h1 { font-size: 1.3rem; margin-bottom: 1rem; }
     h2 { margin-top: 1.5rem; margin-bottom: 0.8rem; }
 
-  .stButton button {
+ .stButton button {
         height: 50px; /* Slightly smaller height for very small screens */
         font-size: 1rem;
     }
 
     /* Even fewer slots per row for tiny screens */
-  .stHorizontalBlock > div {
+ .stHorizontalBlock > div {
         flex-basis: calc(50% - 0.75rem); /* 2 slots per row */
         max-width: calc(50% - 0.75rem);
     }
-  .stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
+ .stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
         margin-right: 0;
     }
 }
@@ -264,148 +264,159 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
 
 st.header("Dashboard Overview")
 col1, col2 = st.columns(2)
+now_dt = datetime.now()
+user_has_active_or_future_booking = False
+user_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime >?", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
+
+if user_bookings:
+    user_has_active_or_future_booking = True
+    # Filter for active booking to display in the dashboard metric
+    active_booking_query = next((booking for booking in user_bookings if datetime.strptime(booking[2], "%Y-%m-%d %H:%M") <= now_dt <= datetime.strptime(booking[3], "%Y-%m-%d %H:%M")), None)
+else:
+    active_booking_query = None
+
 with col1:
-    now_dt = datetime.now()
-    active_booking_query = cur.execute("SELECT id, slot_number, end_datetime FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchone()
     if active_booking_query:
-        active_booking_id, slot_num, end_time_str = active_booking_query
+        active_booking_id, slot_num, start_time_str, end_time_str = active_booking_query
         end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M")
         st.success(f"**Currently Parked**\n\n**Slot:** {slot_num}\n\n**Until:** {end_time.strftime('%I:%M %p')}\n\n**Time Remaining:** {str(end_time - now_dt).split('.')[0]}")
     else: 
         st.info("No active parking session.")
-        active_booking_id = None # Ensure active_booking_id is None if no active booking
 
-with col2: st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id=?", (st.session_state.user_id,)).fetchone()[0]) # Changed to count user's bookings
+with col2: st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id=?", (st.session_state.user_id,)).fetchone()[0])
 
-# --- CANCEL/END BOOKING SECTION ---
+# --- MANAGE BOOKINGS SECTION ---
 st.subheader("Manage Your Bookings")
-user_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? ORDER BY start_datetime", (st.session_state.user_id,)).fetchall()
 
-if user_bookings:
+if user_bookings: # Display current/future bookings here
     for booking_id, slot_number, start_dt_str, end_dt_str in user_bookings:
         start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
         end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
         
         is_active = (start_dt_obj <= now_dt <= end_dt_obj)
         is_future = (start_dt_obj > now_dt)
-        is_past = (end_dt_obj < now_dt)
 
         if is_active:
             status_text = "Active Now"
             button_label = "End Session Early"
             button_key = f"end_booking_{booking_id}"
             button_help = "Ends your current parking session immediately."
-            button_color = "secondary" # Make it a standard button color
+            button_color = "secondary"
         elif is_future:
             status_text = "Upcoming"
             button_label = "Cancel Booking"
             button_key = f"cancel_booking_{booking_id}"
             button_help = "Cancels this future booking."
             button_color = "secondary"
-        else: # Past booking
-            status_text = "Completed"
-            button_label = "Booking History" # No action needed
-            button_key = f"view_history_{booking_id}"
-            button_color = "disabled" # Visually disable
-
+        
         booking_col1, booking_col2, booking_col3 = st.columns([0.5, 3, 2])
         with booking_col1:
             st.markdown(f"**{slot_number}**")
         with booking_col2:
             st.markdown(f"*{status_text}* from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
         with booking_col3:
-            if button_color!= "disabled":
-                if st.button(button_label, key=button_key, type=button_color, help=button_help):
-                    if st.session_state[f"confirm_{button_key}"] if f"confirm_{button_key}" in st.session_state else False:
-                        # User confirmed, proceed with deletion
-                        cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
-                        conn.commit()
-                        st.success(f"{'Session ended' if is_active else 'Booking cancelled'} for slot {slot_number}.")
-                        del st.session_state[f"confirm_{button_key}"] # Clear confirmation state
-                        st.rerun()
-                    else:
-                        # First click, ask for confirmation
-                        st.session_state[f"confirm_{button_key}"] = True
-                        st.warning("Click again to confirm!", icon="⚠️")
-            else:
-                st.button(button_label, key=button_key, disabled=True)
-
-else:
-    st.info("You have no current or upcoming bookings.")
-
-st.header("Book a New Parking Slot")
-st.markdown("<p style='color: var(--color-text-secondary);'>Step 1: Select your desired time frame.</p>", unsafe_allow_html=True)
-booking_date = st.date_input("Select Date", min_value=date.today())
-col1, col2 = st.columns(2)
-with col1: entry_time = st.time_input("Select Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
-with col2: exit_time = st.time_input("Select Exit Time")
-
-start_dt, end_dt = datetime.combine(booking_date, entry_time), datetime.combine(booking_date, exit_time)
-if exit_time <= entry_time:
-    end_dt += timedelta(days=1)
-    st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
-
-# --- CLICKABLE LIVE AVAILABILITY GRID (The Correct Way) ---
-st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
-slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
-blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
-
-def handle_slot_click(slot_name):
-    if st.session_state.selected_slot == slot_name: st.session_state.selected_slot = None
-    else: st.session_state.selected_slot = slot_name
-
-# --- Inject CSS for slot colors dynamically ---
-slot_styles = ""
-for s in slots:
-    is_blocked = s in blocked_for_selection
-    is_selected = s == st.session_state.selected_slot
+            if st.button(button_label, key=button_key, type=button_color, help=button_help):
+                if st.session_state.get(f"confirm_{button_key}", False):
+                    cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
+                    conn.commit()
+                    st.success(f"{'Session ended' if is_active else 'Booking cancelled'} for slot {slot_number}.")
+                    del st.session_state[f"confirm_{button_key}"] # Clear confirmation state
+                    st.session_state.selected_slot = None # Clear any pending selection
+                    st.rerun()
+                else:
+                    st.session_state[f"confirm_{button_key}"] = True
+                    st.warning("Click again to confirm!", icon="⚠️")
     
-    # Base selector for this specific button
-    selector = f'button[data-testid*="st.button"][data-testid$="slot_{s}"]'
+    # Also display past bookings here for completeness, without action buttons
+    past_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
+    if past_bookings:
+        st.markdown("---")
+        st.markdown("#### Past Bookings")
+        for booking_id, slot_number, start_dt_str, end_dt_str in past_bookings:
+            start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
+            end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
+            st.markdown(f"- **{slot_number}** (Completed) from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
 
-    if is_selected:
-        slot_styles += f"{selector} {{ border: 2px solid var(--color-accent); background-color: rgba(74, 144, 226, 0.1); color: white!important; }}\n"
-    elif is_blocked:
-        slot_styles += f"{selector} {{ border-left: 3px solid var(--color-busy); color: var(--color-text-secondary); }}\n"
-    else: # Free
-        slot_styles += f"{selector} {{ border-left: 3px solid var(--color-free); color: var(--color-free); }}\n"
+else: # No current or future bookings
+    st.info("You have no current or upcoming bookings.")
+    # Show past bookings here too if there are no current/future ones
+    past_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
+    if past_bookings:
+        st.markdown("---")
+        st.markdown("#### Past Bookings")
+        for booking_id, slot_number, start_dt_str, end_dt_str in past_bookings:
+            start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
+            end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
+            st.markdown(f"- **{slot_number}** (Completed) from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
 
-st.markdown(f"<style>{slot_styles}</style>", unsafe_allow_html=True)
+st.markdown("---") # Separator between sections
 
-# Display the grid
-# Use st.columns to create a flexible grid that wraps
-num_columns_desktop = 10
-# For mobile, we'll aim for fewer columns (e.g., 3 or 2)
-# The CSS media queries handle this by adjusting flex-basis
-for i in range(0, len(slots), num_columns_desktop):
-    row_slots = slots[i:i + num_columns_desktop]
-    cols = st.columns(len(row_slots)) # Create columns dynamically based on row length
-    for j, s in enumerate(row_slots):
-        with cols[j]:
-            is_blocked = s in blocked_for_selection
-            st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+# --- Book a New Parking Slot Section (Conditional Display) ---
+if not user_has_active_or_future_booking: # Only show if no active/future bookings
+    st.header("Book a New Parking Slot")
+    st.markdown("<p style='color: var(--color-text-secondary);'>Step 1: Select your desired time frame.</p>", unsafe_allow_html=True)
+    booking_date = st.date_input("Select Date", min_value=date.today())
+    col1, col2 = st.columns(2)
+    with col1: entry_time = st.time_input("Select Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
+    with col2: exit_time = st.time_input("Select Exit Time")
 
-# --- CONFIRMATION SECTION ---
-if st.session_state.selected_slot:
-    if st.session_state.selected_slot in blocked_for_selection:
-        st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
-        st.session_state.selected_slot = None
-        st.rerun()
-    else:
-        st.info(f"You have selected slot **{st.session_state.selected_slot}**. Please confirm your booking.", icon="🅿️")
-        if st.button("Confirm Booking", type="primary", use_container_width=True):
-            # Check for overlapping bookings for *this user*, excluding current active session if it exists and is not the one being rebooked
-            # If a user ends a session, they should be able to book immediately again if the slot is free.
-            # This logic implicitly handles that by checking *all* bookings against new dates
-            overlapping_query = cur.execute("SELECT id FROM bookings WHERE user_id=? AND NOT (end_datetime <=? OR start_datetime >=?)", (st.session_state.user_id, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchone()
+    start_dt, end_dt = datetime.combine(booking_date, entry_time), datetime.combine(booking_date, exit_time)
+    if exit_time <= entry_time:
+        end_dt += timedelta(days=1)
+        st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-            if overlapping_query:
-                st.error("You already have an overlapping booking. Please cancel it first.", icon="🚫")
-            else:
+    # --- CLICKABLE LIVE AVAILABILITY GRID (The Correct Way) ---
+    st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
+    slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
+    blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
+
+    def handle_slot_click(slot_name):
+        if st.session_state.selected_slot == slot_name: st.session_state.selected_slot = None
+        else: st.session_state.selected_slot = slot_name
+
+    # --- Inject CSS for slot colors dynamically ---
+    slot_styles = ""
+    for s in slots:
+        is_blocked = s in blocked_for_selection
+        is_selected = s == st.session_state.selected_slot
+        
+        # Base selector for this specific button
+        selector = f'button[data-testid*="st.button"][data-testid$="slot_{s}"]'
+
+        if is_selected:
+            slot_styles += f"{selector} {{ border: 2px solid var(--color-accent); background-color: rgba(74, 144, 226, 0.1); color: white!important; }}\n"
+        elif is_blocked:
+            slot_styles += f"{selector} {{ border-left: 3px solid var(--color-busy); color: var(--color-text-secondary); }}\n"
+        else: # Free
+            slot_styles += f"{selector} {{ border-left: 3px solid var(--color-free); color: var(--color-free); }}\n"
+
+    st.markdown(f"<style>{slot_styles}</style>", unsafe_allow_html=True)
+
+    # Display the grid
+    num_columns_desktop = 10
+    for i in range(0, len(slots), num_columns_desktop):
+        row_slots = slots[i:i + num_columns_desktop]
+        cols = st.columns(len(row_slots))
+        for j, s in enumerate(row_slots):
+            with cols[j]:
+                is_blocked = s in blocked_for_selection
+                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+
+    # --- CONFIRMATION SECTION ---
+    if st.session_state.selected_slot:
+        if st.session_state.selected_slot in blocked_for_selection:
+            st.error(f"Slot {st.session_state.selected_slot} is no longer available.", icon="🚫")
+            st.session_state.selected_slot = None
+            st.rerun()
+        else:
+            st.info(f"You have selected slot **{st.session_state.selected_slot}**. Please confirm your booking.", icon="🅿️")
+            if st.button("Confirm Booking", type="primary", use_container_width=True):
                 cur.execute("INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)", (st.session_state.user_id, st.session_state.selected_slot, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M")))
                 conn.commit()
                 st.success(f"Slot {st.session_state.selected_slot} booked successfully!", icon="✅")
                 st.session_state.selected_slot = None
                 st.rerun()
+    else:
+        st.warning("No slot selected. Please choose a time and click an available slot.", icon="👆")
 else:
-    st.warning("No slot selected. Please choose a time and click an available slot.", icon="👆")
+    st.info("You already have an active or upcoming parking session. Please manage existing bookings first to book a new slot.", icon="ℹ️")
