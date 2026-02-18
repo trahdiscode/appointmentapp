@@ -524,7 +524,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
-        <span class="app-brand-name">MyranOS</span>
+        <span class="app-brand-name">ParkOS</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
