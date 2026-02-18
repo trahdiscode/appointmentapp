@@ -639,7 +639,7 @@ if user_current_future:
                     st.session_state[f"confirm_{btn_key}"] = True
                     st.warning("Click again to confirm.")
 else:
-    st.markdown('<div class="info-empty">No current.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-empty">No current booking.</div>', unsafe_allow_html=True)
 
 # Past bookings
 past_bookings = cur.execute(
