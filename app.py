@@ -11,44 +11,46 @@ from datetime import datetime, date, timedelta
 # ---------- AUTO REFRESH ----------
 # st_autorefresh(interval=5000, key="refresh") # Commenting out for cleaner testing, uncomment if needed
 
-# ---------- DARK MODE CSS (Revised with distinct fonts and colors) ----------
+# ---------- DARK MODE CSS (Revised for DRAMATIC and RELIABLE change) ----------
 st.markdown("""
 <style>
+/* Import Google Fonts for dramatic change */
+@import url('https://fonts.googleapis.com/css2?family=Lobster&family=Roboto+Mono:wght@400;700&family=Open+Sans:wght@400;500;600;700&display=swap');
+
 /* Overall App Styling - Using a cleaner, modern sans-serif font */
 .stApp {
     background-color: #0f1117; /* Dark background */
     color: #f0f2f6; /* Light text for contrast */
-    font-family: 'Open Sans', 'Segoe UI', 'Roboto', sans-serif; /* Modern, clean font stack */
+    font-family: 'Open Sans', sans-serif; /* Modern, clean font stack for general text */
     line-height: 1.6;
 }
 
-/* Headings */
-/* Main title - for 'Parking Slot Booking' (e.g., in st.title) */
-h1.css-1r6dm7m { /* Target Streamlit's generated <h1> */
-    font-family: 'Playfair Display', serif; /* A distinctive, elegant serif font */
-    font-size: 3.2em; /* Significantly larger */
-    color: #bdbdbd; /* A professional light grey */
-    font-weight: 700; /* Bold and impactful */
-    border-bottom: 3px solid #4a4a4a; /* A thicker, dark grey border */
-    padding-bottom: 18px; /* More space above border */
-    margin-bottom: 40px; /* More space below title */
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.4); /* Subtle text shadow */
-}
-
-/* Dashboard title - for 'Parking Dashboard' (e.g., in st.header) */
-h2.css-10trblm { /* Target Streamlit's generated <h2> */
-    font-family: 'Montserrat', sans-serif; /* A strong, clean sans-serif font */
-    font-size: 2.2em; /* Distinct, yet not as dominant as main title */
-    color: #8bbdc2; /* A professional bluish-grey */
-    font-weight: 600; /* Medium bold */
-    border-bottom: 1px solid #5a5a5a; /* Lighter border */
-    padding-bottom: 12px;
-    margin-top: 50px; /* More space before section */
+/* Custom classes for our headings - this is where the magic happens! */
+.main-title {
+    font-family: 'Lobster', cursive; /* A very decorative, unmistakable font */
+    font-size: 4.5em; /* SUPER large to be seen */
+    color: #FFD700; /* Gold color for high contrast */
+    text-align: center; /* Center align for impact */
     margin-bottom: 30px;
+    margin-top: 20px;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.7); /* Stronger shadow */
+    border-bottom: 4px solid #FFD700; /* Thick gold border */
+    padding-bottom: 15px;
 }
 
-/* Subheadings (e.g., in st.subheader) */
-h3.css-10trblm { /* Target Streamlit's generated <h3> */
+.dashboard-title {
+    font-family: 'Roboto Mono', monospace; /* A distinct monospace font */
+    font-size: 2.5em; /* Large, but clearly different from main title */
+    color: #4CAF50; /* A vibrant green */
+    text-align: left; /* Keep left aligned */
+    margin-top: 60px; /* More space above */
+    margin-bottom: 30px;
+    border-bottom: 2px solid #4CAF50; /* Green border */
+    padding-bottom: 10px;
+}
+
+/* Streamlit's default h3 (for subheaders) */
+h3.st-emotion-cache-nahz7x { /* Targeting Streamlit's internal class for default subheaders */
     font-family: 'Open Sans', sans-serif; /* Consistent with body text, but distinct size */
     font-size: 1.6em;
     color: #e0e0e0; /* Brighter for sub-sections */
@@ -143,9 +145,6 @@ small {
     margin-bottom: 25px;
 }
 
-/* Import Google Fonts for 'Playfair Display' and 'Montserrat' */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,8 +202,8 @@ for k in ("user_id", "vehicle_number"):
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
-    # Using st.title for the main heading on the login/register screen
-    st.title("🅿️ Parking Slot Booking")
+    # Applying custom class directly with HTML for explicit styling
+    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -234,8 +233,8 @@ if st.session_state.user_id is None:
 # ---------- HEADER ----------
 col1, col2, col3 = st.columns([6, 3, 1])
 with col1:
-    # Using st.title for the main heading in the header
-    st.title("🅿️ Parking Slot Booking")
+    # Applying custom class directly with HTML for explicit styling
+    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
 with col2:
     st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
 with col3:
@@ -260,8 +259,8 @@ if st.session_state.vehicle_number is None:
 # ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# Using st.header for the dashboard section heading
-st.header("🅿️ Parking Dashboard")
+# Applying custom class directly with HTML for explicit styling
+st.markdown("<h2 class='dashboard-title'>🅿️ Parking Dashboard</h2>", unsafe_allow_html=True)
 
 st.divider() # Added a divider for clear section separation
 
