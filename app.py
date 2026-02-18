@@ -676,36 +676,31 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
+    # Generate 30-min interval time options
+    time_labels = [datetime.strptime(f"{h:02d}:{m:02d}", "%H:%M").strftime("%I:%M %p") for h in range(24) for m in (0, 30)]
+    now_min_idx = datetime.now().hour * 2
+    default_exit_idx = min(now_min_idx + 4, len(time_labels) - 1)
 
-    now_hour = datetime.now().hour
-    entry_slot = st.slider("Entry Time", min_value=0, max_value=47, value=now_hour * 2,
-                           format="%d", key="entry_slider",
-                           help="Each step = 30 minutes")
-    exit_slot = st.slider("Exit Time", min_value=0, max_value=47, value=min(now_hour * 2 + 4, 47),
-                          format="%d", key="exit_slider",
-                          help="Each step = 30 minutes")
+    col_d, col_en, col_ex = st.columns(3)
+    with col_d:
+        booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
+    with col_en:
+        entry_label = st.selectbox("Entry Time", time_labels, index=now_min_idx, key="entry_select")
+    with col_ex:
+        exit_label = st.selectbox("Exit Time", time_labels, index=default_exit_idx, key="exit_select")
 
-    def slot_to_time(slot): return datetime.strptime(f"{slot // 2:02d}:{('00' if slot % 2 == 0 else '30')}", "%H:%M").time()
-
-    entry_time = slot_to_time(entry_slot)
-    exit_time  = slot_to_time(exit_slot)
+    entry_time = datetime.strptime(entry_label, "%I:%M %p").time()
+    exit_time  = datetime.strptime(exit_label,  "%I:%M %p").time()
 
     start_dt = datetime.combine(booking_date, entry_time)
     end_dt   = datetime.combine(booking_date, exit_time)
     next_day_note = False
-    if exit_slot <= entry_slot:
+    if exit_time <= entry_time:
         end_dt += timedelta(days=1)
         next_day_note = True
 
-    # Show selected window
-    window_label = f"{entry_time.strftime('%I:%M %p')} → {exit_time.strftime('%I:%M %p')}"
     if next_day_note:
-        window_label += " (+1 day)"
-    st.markdown(f'<div style="font-family:var(--font-mono);font-size:0.9rem;color:var(--text-1);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.5rem 1rem;display:inline-block;margin-top:0.25rem;">{window_label}</div>', unsafe_allow_html=True)
-
-    if next_day_note:
-        st.markdown('<div class="warn-note" style="margin-top:0.5rem;">⚠️ Exit time is before entry — booking extends to the next day.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="warn-note">⚠️ Exit time is before entry — booking extends to the next day.</div>', unsafe_allow_html=True)
 
     # Step 2
     st.markdown("""
