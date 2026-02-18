@@ -16,32 +16,32 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-    --bg:           #0D0E11;
-    --surface:      #13151A;
-    --surface-2:    #1A1D25;
-    --border:       rgba(255,255,255,0.07);
+    --bg: #0D0E11;
+    --surface: #13151A;
+    --surface-2: #1A1D25;
+    --border: rgba(255,255,255,0.07);
     --border-hover: rgba(255,255,255,0.14);
-    --text-1:       #F0F1F3;
-    --text-2:       #8B8FA8;
-    --text-3:       #52566A;
-    --accent:       #4F78FF;
-    --accent-soft:  rgba(79,120,255,0.12);
-    --green:        #22C55E;
-    --green-soft:   rgba(34,197,94,0.10);
-    --red:          #F25C5C;
-    --red-soft:     rgba(242,92,92,0.10);
-    --amber:        #F59E0B;
-    --amber-soft:   rgba(245,158,11,0.10);
-    --radius:       10px;
-    --radius-sm:    6px;
-    --font:         'DM Sans', sans-serif;
-    --font-mono:    'DM Mono', monospace;
+    --text-1: #F0F1F3;
+    --text-2: #8B8FA8;
+    --text-3: #52566A;
+    --accent: #4F78FF;
+    --accent-soft: rgba(79,120,255,0.12);
+    --green: #22C55E;
+    --green-soft: rgba(34,197,94,0.10);
+    --red: #F25C5C;
+    --red-soft: rgba(242,92,92,0.10);
+    --amber: #F59E0B;
+    --amber-soft: rgba(245,158,11,0.10);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
 }
 
 /* ── Reset & base ── */
 *, *::before, *::after { box-sizing: border-box; }
-html, body, .stApp { background: var(--bg) !important; font-family: var(--font); color: var(--text-1); }
-.main.block-container { padding: 2rem 2.5rem !important; max-width: 1200px !important; }
+html, body,.stApp { background: var(--bg)!important; font-family: var(--font); color: var(--text-1); }
+.main.block-container { padding: 2rem 2.5rem!important; max-width: 1200px!important; }
 p, li, span { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 
 /* ── Scrollbar ── */
@@ -86,7 +86,7 @@ h3 { font-size: 0.95rem; font-weight: 500; color: var(--text-2); margin: 1.25rem
     gap: 0.5rem;
 }
 .app-brand-name {
-    font-size: 1.3rem;
+    font-size: 2.2rem; /* INCREASED FONT SIZE FOR PARKOS */
     font-weight: 600;
     color: var(--text-1);
     letter-spacing: -0.04em;
@@ -265,132 +265,132 @@ h3 { font-size: 0.95rem; font-weight: 500; color: var(--text-2); margin: 1.25rem
 /* ── Streamlit overrides ── */
 
 /* Inputs */
-.stTextInput > label, .stDateInput > label, .stTimeInput > label, .stSelectbox > label {
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-    color: var(--text-3) !important;
-    margin-bottom: 4px !important;
+.stTextInput > label,.stDateInput > label,.stTimeInput > label,.stSelectbox > label {
+    font-size: 0.75rem!important;
+    font-weight: 500!important;
+    letter-spacing: 0.04em!important;
+    text-transform: uppercase!important;
+    color: var(--text-3)!important;
+    margin-bottom: 4px!important;
 }
-.stTextInput input, .stDateInput input, .stTimeInput input {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm) !important;
-    color: var(--text-1) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 0.88rem !important;
-    padding: 0.6rem 0.9rem !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
+.stTextInput input,.stDateInput input,.stTimeInput input {
+    background: var(--surface)!important;
+    border: 1px solid var(--border)!important;
+    border-radius: var(--radius-sm)!important;
+    color: var(--text-1)!important;
+    font-family: var(--font-mono)!important;
+    font-size: 0.88rem!important;
+    padding: 0.6rem 0.9rem!important;
+    transition: border-color 0.2s, box-shadow 0.2s!important;
 }
-.stTextInput input:focus, .stDateInput input:focus, .stTimeInput input:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(79,120,255,0.12) !important;
-    outline: none !important;
+.stTextInput input:focus,.stDateInput input:focus,.stTimeInput input:focus {
+    border-color: var(--accent)!important;
+    box-shadow: 0 0 0 3px rgba(79,120,255,0.12)!important;
+    outline: none!important;
 }
 
 /* Buttons */
 .stButton > button {
-    font-family: var(--font) !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    border-radius: var(--radius-sm) !important;
-    transition: all 0.18s ease !important;
-    min-height: 40px !important;
+    font-family: var(--font)!important;
+    font-size: 0.85rem!important;
+    font-weight: 500!important;
+    border-radius: var(--radius-sm)!important;
+    transition: all 0.18s ease!important;
+    min-height: 40px!important;
 }
-.stButton > button[kind="primary"], .stButton > button[data-testid*="primary"] {
-    background: var(--accent) !important;
-    border: 1px solid var(--accent) !important;
-    color: #fff !important;
+.stButton > button[kind="primary"],.stButton > button[data-testid*="primary"] {
+    background: var(--accent)!important;
+    border: 1px solid var(--accent)!important;
+    color: #fff!important;
 }
 .stButton > button[kind="primary"]:hover {
-    background: #6088FF !important;
-    box-shadow: 0 4px 16px rgba(79,120,255,0.3) !important;
+    background: #6088FF!important;
+    box-shadow: 0 4px 16px rgba(79,120,255,0.3)!important;
     transform: translateY(-1px);
 }
 .stButton > button[kind="secondary"] {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-2) !important;
+    background: var(--surface)!important;
+    border: 1px solid var(--border)!important;
+    color: var(--text-2)!important;
 }
 .stButton > button[kind="secondary"]:hover {
-    border-color: var(--border-hover) !important;
-    color: var(--text-1) !important;
-    background: var(--surface-2) !important;
+    border-color: var(--border-hover)!important;
+    color: var(--text-1)!important;
+    background: var(--surface-2)!important;
 }
 
 /* Slot buttons */
-div[data-testid="stHorizontalBlock"] .stButton > button {
-    height: 52px !important;
-    font-family: var(--font-mono) !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-2) !important;
+div[data-testid="stHorizontalBlock"].stButton > button {
+    height: 52px!important;
+    font-family: var(--font-mono)!important;
+    font-size: 0.85rem!important;
+    font-weight: 500!important;
+    background: var(--surface)!important;
+    border: 1px solid var(--border)!important;
+    color: var(--text-2)!important;
 }
-div[data-testid="stHorizontalBlock"] .stButton > button:disabled {
-    opacity: 0.35 !important;
-    cursor: not-allowed !important;
+div[data-testid="stHorizontalBlock"].stButton > button:disabled {
+    opacity: 0.35!important;
+    cursor: not-allowed!important;
 }
 
 /* Alerts */
 div[data-testid="stAlert"] {
-    background: var(--surface) !important;
-    border-radius: var(--radius) !important;
-    border: 1px solid var(--border) !important;
-    border-left: 3px solid !important;
-    font-size: 0.85rem !important;
+    background: var(--surface)!important;
+    border-radius: var(--radius)!important;
+    border: 1px solid var(--border)!important;
+    border-left: 3px solid!important;
+    font-size: 0.85rem!important;
 }
-div[data-testid="stAlert"] p { font-size: 0.85rem !important; }
+div[data-testid="stAlert"] p { font-size: 0.85rem!important; }
 
 /* Metrics */
 div[data-testid="stMetric"] {
-    background: var(--surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    padding: 1.25rem 1.5rem !important;
+    background: var(--surface)!important;
+    border: 1px solid var(--border)!important;
+    border-radius: var(--radius)!important;
+    padding: 1.25rem 1.5rem!important;
 }
 div[data-testid="stMetric"] label {
-    font-size: 0.72rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
-    color: var(--text-3) !important;
-    white-space: normal !important;
+    font-size: 0.72rem!important;
+    text-transform: uppercase!important;
+    letter-spacing: 0.06em!important;
+    color: var(--text-3)!important;
+    white-space: normal!important;
 }
 div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-    font-family: var(--font-mono) !important;
-    font-size: 2rem !important;
-    font-weight: 400 !important;
-    color: var(--text-1) !important;
+    font-family: var(--font-mono)!important;
+    font-size: 2rem!important;
+    font-weight: 400!important;
+    color: var(--text-1)!important;
 }
 
 /* Tabs */
 .stTabs [data-baseweb="tab-list"] {
-    background: transparent !important;
-    border-bottom: 1px solid var(--border) !important;
-    gap: 0 !important;
+    background: transparent!important;
+    border-bottom: 1px solid var(--border)!important;
+    gap: 0!important;
 }
 .stTabs [data-baseweb="tab"] {
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-2) !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    padding: 0.6rem 1.25rem !important;
-    border-radius: 0 !important;
-    border-bottom: 2px solid transparent !important;
-    transition: all 0.2s !important;
+    background: transparent!important;
+    border: none!important;
+    color: var(--text-2)!important;
+    font-size: 0.85rem!important;
+    font-weight: 500!important;
+    padding: 0.6rem 1.25rem!important;
+    border-radius: 0!important;
+    border-bottom: 2px solid transparent!important;
+    transition: all 0.2s!important;
 }
-.stTabs [data-baseweb="tab"]:hover { color: var(--text-1) !important; }
+.stTabs [data-baseweb="tab"]:hover { color: var(--text-1)!important; }
 .stTabs [aria-selected="true"] {
-    color: var(--text-1) !important;
-    border-bottom-color: var(--accent) !important;
+    color: var(--text-1)!important;
+    border-bottom-color: var(--accent)!important;
 }
-.stTabs [data-baseweb="tab-panel"] { padding-top: 1.5rem !important; }
+.stTabs [data-baseweb="tab-panel"] { padding-top: 1.5rem!important; }
 
 /* Columns gap */
-div[data-testid="stHorizontalBlock"] { gap: 0.5rem !important; }
+div[data-testid="stHorizontalBlock"] { gap: 0.5rem!important; }
 
 /* Info block */
 .info-empty {
@@ -429,7 +429,7 @@ div[data-testid="stHorizontalBlock"] { gap: 0.5rem !important; }
     padding: 2.5rem;
 }
 .login-logo {
-    font-size: 2rem;
+    font-size: 2.2rem; /* INCREASED FONT SIZE FOR PARKOS LOGIN */
     font-weight: 700;
     letter-spacing: -0.06em;
     color: var(--text-1);
@@ -453,13 +453,13 @@ div[data-testid="stHorizontalBlock"] { gap: 0.5rem !important; }
 }
 
 @media (max-width: 768px) {
-    .main.block-container { padding: 1rem 1.25rem !important; }
-    .stat-grid { grid-template-columns: 1fr 1fr; }
-    .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-    .booking-item { flex-wrap: wrap; }
+   .main.block-container { padding: 1rem 1.25rem!important; }
+   .stat-grid { grid-template-columns: 1fr 1fr; }
+   .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+   .booking-item { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
-    .stat-grid { grid-template-columns: 1fr; }
+   .stat-grid { grid-template-columns: 1fr; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -491,7 +491,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.markdown("""
     <div style="max-width:420px;margin:3rem auto;">
         <div style="margin-bottom:2rem;">
-            <div style="font-size:1.8rem;font-weight:700;letter-spacing:-0.05em;color:var(--text-1);">ParkOS</div>
+            <div class="login-logo">ParkOS</div>
             <div style="font-size:0.8rem;color:var(--text-3);margin-top:2px;">Intelligent Parking Management</div>
         </div>
     </div>
@@ -627,7 +627,7 @@ if user_current_future:
             </div>
             """, unsafe_allow_html=True)
         with col_btn:
-            st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True) # Spacer for alignment
             if st.button(btn_label, key=btn_key, type="secondary", use_container_width=True):
                 if st.session_state.get(f"confirm_{btn_key}", False):
                     cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
@@ -730,26 +730,26 @@ if not user_has_active_or_future:
         sel = f'button[data-testid*="slot_{s}"]'
         if is_selected:
             slot_css += f"""{sel} {{
-                background: var(--accent-soft) !important;
-                border: 1.5px solid var(--accent) !important;
-                color: var(--accent) !important;
+                background: var(--accent-soft)!important;
+                border: 1.5px solid var(--accent)!important;
+                color: var(--accent)!important;
             }}\n"""
         elif is_blocked:
             slot_css += f"""{sel} {{
-                background: var(--red-soft) !important;
-                border: 1px solid rgba(242,92,92,0.2) !important;
-                color: var(--red) !important;
-                cursor: not-allowed !important;
+                background: var(--red-soft)!important;
+                border: 1px solid rgba(242,92,92,0.2)!important;
+                color: var(--red)!important;
+                cursor: not-allowed!important;
             }}\n"""
         else:
             slot_css += f"""{sel} {{
-                border-left: 2px solid var(--green) !important;
-                color: var(--text-1) !important;
+                border-left: 2px solid var(--green)!important;
+                color: var(--text-1)!important;
             }}\n"""
             slot_css += f"""{sel}:hover {{
-                background: var(--green-soft) !important;
-                border-color: var(--green) !important;
-                color: var(--green) !important;
+                background: var(--green-soft)!important;
+                border-color: var(--green)!important;
+                color: var(--green)!important;
             }}\n"""
 
     st.markdown(f"<style>{slot_css}</style>", unsafe_allow_html=True)
@@ -762,7 +762,7 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
-                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot != s)
+                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot!= s)
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     # Confirmation
