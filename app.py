@@ -65,7 +65,6 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
 .stButton > button.warning:hover { background-color: #D32F2F; border-color: #D32F2F; }
 
 /* --- Card Styling --- */
-/* This will now style our custom container */
 div[data-testid="stVerticalBlock"].active-booking-card, 
 div[data-testid="stMetric"] {
     background-color: var(--color-bg-secondary);
@@ -74,12 +73,10 @@ div[data-testid="stMetric"] {
     padding: 1.5rem;
     height: 100%;
 }
-/* Specifically style the active booking card */
 div[data-testid="stVerticalBlock"].active-booking-card {
     background-color: rgba(34, 129, 74, 0.1);
     border-color: rgba(34, 129, 74, 0.3);
 }
-
 div[data-testid="stAlert"][data-baseweb="alert-info"] { 
     background-color: rgba(74, 144, 226, 0.1); 
     border-color: rgba(74, 144, 226, 0.3); 
@@ -127,21 +124,31 @@ def create_user(u, p):
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
-# ---------- AUTH PAGE ----------
+# ---------- AUTH PAGE (CRITICAL BUG FIX) ----------
 if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.title("🅿️ Parking Slot Booking System")
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
-        u, p = st.text_input("Username", key="login_user"), st.text_input("Password", type="password", key="login_pass")
+        u = st.text_input("Username", key="login_user")
+        p = st.text_input("Password", type="password", key="login_pass")
         if st.button("Login", use_container_width=True):
             user = get_user(u, p)
-            if user: st.session_state.user_id, st.session_state.vehicle_number, st.rerun() = user[0], user[1]
-            else: st.error("Invalid credentials")
+            if user:
+                # --- THIS IS THE FIX ---
+                # Separate the assignments from the function call.
+                st.session_state.user_id = user[0]
+                st.session_state.vehicle_number = user[1]
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
     with tab2:
-        u, p = st.text_input("New Username", key="reg_user"), st.text_input("New Password", type="password", key="reg_pass")
+        u = st.text_input("New Username", key="reg_user")
+        p = st.text_input("New Password", type="password", key="reg_pass")
         if st.button("Register", use_container_width=True):
-            if create_user(u, p): st.success("Account created. Login now.")
-            else: st.error("Username already exists")
+            if create_user(u, p):
+                st.success("Account created. Login now.")
+            else:
+                st.error("Username already exists")
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
@@ -163,11 +170,17 @@ with col1:
     now_dt = datetime.now()
     active = cur.execute("SELECT id, slot_number, end_datetime FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchone()
     
+    # --- Function to handle cancellation ---
+    def cancel_booking(b_id, s_number):
+        cur.execute("DELETE FROM bookings WHERE id =?", (b_id,))
+        conn.commit()
+        st.success(f"Booking for slot {s_number} cancelled.")
+        st.rerun()
+
     if active:
         booking_id, slot_number, end_datetime_str = active
         end_time = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
         
-        # --- THE FIX: Use a container for the active booking card ---
         with st.container(border=False):
             st.markdown('<div class="active-booking-card">', unsafe_allow_html=True)
             info_col, button_col = st.columns([3, 1])
@@ -181,12 +194,7 @@ with col1:
                     </p>
                 """, unsafe_allow_html=True)
             with button_col:
-                st.button("Cancel", key=f"cancel_{booking_id}", type="warning", use_container_width=True, on_click=lambda: (
-                    cur.execute("DELETE FROM bookings WHERE id =?", (booking_id,)),
-                    conn.commit(),
-                    st.success(f"Booking for slot {slot_number} cancelled."),
-                    st.rerun()
-                ))
+                st.button("Cancel", key=f"cancel_{booking_id}", type="warning", use_container_width=True, on_click=cancel_booking, args=(booking_id, slot_number))
             st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("No active parking session.")
