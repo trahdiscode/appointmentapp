@@ -11,56 +11,68 @@ from datetime import datetime, date, timedelta
 # ---------- AUTO REFRESH ----------
 # st_autorefresh(interval=5000, key="refresh") # Commenting out for cleaner testing, uncomment if needed
 
-# ---------- DARK MODE CSS (Refined for Professionalism) ----------
+# ---------- DARK MODE CSS (Revised with distinct fonts and colors) ----------
 st.markdown("""
 <style>
-/* Overall App Styling */
+/* Overall App Styling - Using a cleaner, modern sans-serif font */
 .stApp {
     background-color: #0f1117; /* Dark background */
     color: #f0f2f6; /* Light text for contrast */
-    font-family: 'Segoe UI', 'Roboto', sans-serif; /* Modern, clean font stack */
+    font-family: 'Open Sans', 'Segoe UI', 'Roboto', sans-serif; /* Modern, clean font stack */
     line-height: 1.6;
 }
 
 /* Headings */
-/* Main title - for 'Parking Slot Booking' */
+/* Main title - for 'Parking Slot Booking' (e.g., in st.title) */
 h1.css-1r6dm7m { /* Target Streamlit's generated <h1> */
-    font-size: 2.5em; /* Slightly larger, impactful */
-    color: #6a6e73; /* Professional dark grey */
-    font-weight: 600; /* Medium bold */
-    border-bottom: 2px solid #30363d; /* Subtle dark border */
-    padding-bottom: 15px; /* Space above border */
-    margin-bottom: 30px; /* Space below title */
+    font-family: 'Playfair Display', serif; /* A distinctive, elegant serif font */
+    font-size: 3.2em; /* Significantly larger */
+    color: #bdbdbd; /* A professional light grey */
+    font-weight: 700; /* Bold and impactful */
+    border-bottom: 3px solid #4a4a4a; /* A thicker, dark grey border */
+    padding-bottom: 18px; /* More space above border */
+    margin-bottom: 40px; /* More space below title */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4); /* Subtle text shadow */
 }
 
-/* Dashboard title - for 'Parking Dashboard' */
+/* Dashboard title - for 'Parking Dashboard' (e.g., in st.header) */
 h2.css-10trblm { /* Target Streamlit's generated <h2> */
-    font-size: 1.8em; /* Clear, but not as dominant as main title */
-    color: #8b949e; /* Slightly lighter grey */
-    font-weight: 500; /* Regular bold */
-    border-bottom: 1px solid #30363d; /* Lighter border */
-    padding-bottom: 10px;
-    margin-top: 40px; /* More space before section */
-    margin-bottom: 25px;
+    font-family: 'Montserrat', sans-serif; /* A strong, clean sans-serif font */
+    font-size: 2.2em; /* Distinct, yet not as dominant as main title */
+    color: #8bbdc2; /* A professional bluish-grey */
+    font-weight: 600; /* Medium bold */
+    border-bottom: 1px solid #5a5a5a; /* Lighter border */
+    padding-bottom: 12px;
+    margin-top: 50px; /* More space before section */
+    margin-bottom: 30px;
 }
 
-/* Subheadings */
+/* Subheadings (e.g., in st.subheader) */
 h3.css-10trblm { /* Target Streamlit's generated <h3> */
-    font-size: 1.4em;
-    color: #c9d1d9; /* Standard text color for visibility */
-    margin-top: 30px;
-    margin-bottom: 15px;
+    font-family: 'Open Sans', sans-serif; /* Consistent with body text, but distinct size */
+    font-size: 1.6em;
+    color: #e0e0e0; /* Brighter for sub-sections */
+    margin-top: 35px;
+    margin-bottom: 18px;
+    font-weight: 500;
 }
 
 /* Input Fields */
-.stTextInput > div > div > input,.stDateInput > div > div > input,.stTimeInput > div > div > input,.stSelectbox > div > div > button {
+.stTextInput > div > div > input,
+.stDateInput > div > div > input,
+.stTimeInput > div > div > input,
+.stSelectbox > div > div > button {
     background-color: #161b22; /* Darker input background */
     color: #f0f2f6;
     border: 1px solid #30363d; /* Subtle border */
     border-radius: 5px;
     padding: 10px 12px;
+    font-family: 'Open Sans', sans-serif; /* Consistent font */
 }
-.stTextInput > div > div > input:focus,.stDateInput > div > div > input:focus,.stTimeInput > div > div > input:focus,.stSelectbox > div > div > button:focus {
+.stTextInput > div > div > input:focus,
+.stDateInput > div > div > input:focus,
+.stTimeInput > div > div > input:focus,
+.stSelectbox > div > div > button:focus {
     border-color: #58a6ff; /* Highlight on focus */
     box-shadow: 0 0 0 0.1rem rgba(88, 166, 255, 0.25);
 }
@@ -74,6 +86,7 @@ h3.css-10trblm { /* Target Streamlit's generated <h3> */
     padding: 10px 20px;
     font-weight: 500;
     transition: all 0.2s ease-in-out;
+    font-family: 'Open Sans', sans-serif; /* Consistent font */
 }
 .stButton > button:hover {
     background-color: #30363d; /* Slightly lighter on hover */
@@ -106,6 +119,7 @@ h3.css-10trblm { /* Target Streamlit's generated <h3> */
     font-weight: 700;
     color: white;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow for depth */
+    font-family: 'Open Sans', sans-serif; /* Consistent font */
 }
 .free { background-color: #28a745; } /* Green */
 .busy { background-color: #dc3545; } /* Red */
@@ -119,12 +133,18 @@ small {
 /* Messages */
 .stAlert {
     border-radius: 5px;
+    font-family: 'Open Sans', sans-serif; /* Consistent font */
 }
 
 /* Divider */
 .st-emotion-cache-nahz7x { /* Streamlit divider element */
     background-color: #30363d;
+    margin-top: 25px;
+    margin-bottom: 25px;
 }
+
+/* Import Google Fonts for 'Playfair Display' and 'Montserrat' */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 </style>
 """, unsafe_allow_html=True)
