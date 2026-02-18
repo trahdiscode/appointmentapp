@@ -10,7 +10,7 @@ st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- "15 YEARS OF EXPERIENCE" UI STYLESHEET (Simplified and Corrected) ----------
+# ---------- UPDATED UI STYLESHEET FOR MOBILE RESPONSIVENESS ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
@@ -34,6 +34,7 @@ st.markdown("""
 .stApp {
     background-color: var(--color-bg);
     font-family: var(--font-family);
+    color: var(--color-text-primary); /* Ensure base text color */
 }
 
 /* --- Typography --- */
@@ -45,22 +46,41 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
 /* --- Standard UI Elements --- */
 .stTextInput > div > div > input,
 .stDateInput > div > div > input,
-.stTimeInput > div > div > input {
+.stTimeInput > div > div > input,
+.stSelectbox > div > div > div > div { /* Target selectbox as well */
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
     transition: all 0.2s ease;
+    padding: 0.75rem 1rem; /* More comfortable padding */
 }
 .stTextInput > div > div > input:focus,
 .stDateInput > div > div > input:focus,
-.stTimeInput > div > div > input:focus {
+.stTimeInput > div > div > input:focus,
+.stSelectbox > div > div > div > div:focus-within {
     border-color: var(--color-accent);
     box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
     outline: none;
 }
-.stButton > button.primary { background-color: var(--color-accent); border-color: var(--color-accent); color: #FFFFFF; }
-.stButton > button.primary:hover { background-color: #5A9EE8; border-color: #5A9EE8; }
+.stButton > button.primary { 
+    background-color: var(--color-accent); 
+    border-color: var(--color-accent); 
+    color: #FFFFFF; 
+    padding: 0.75rem 1.25rem; /* Better button padding */
+    font-size: 1rem; /* Readable button text */
+    height: auto; /* Allow height to adjust */
+}
+.stButton > button.primary:hover { 
+    background-color: #5A9EE8; 
+    border-color: #5A9EE8; 
+}
+/* General button styling for better touch targets */
+.stButton button {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    min-height: 44px; /* Ensure minimum touch target size */
+}
 
 /* --- Card Styling --- */
 div[data-testid="stMetric"], div[data-testid="stAlert"] {
@@ -70,15 +90,18 @@ div[data-testid="stMetric"], div[data-testid="stAlert"] {
     padding: 1.5rem;
     height: 100%;
 }
-div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); }
-div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); }
+div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); color: var(--color-free); }
+div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); color: var(--color-accent); }
+div[data-testid="stAlert"][data-baseweb="alert-warning"] { background-color: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.3); color: #FFC107; }
+div[data-testid="stAlert"][data-baseweb="alert-error"] { background-color: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.3); color: var(--color-busy); }
 
 /* --- Styling for st.button used as slots --- */
 div[data-testid="stHorizontalBlock"] {
     gap: 0.75rem;
+    flex-wrap: wrap; /* Allow slots to wrap on smaller screens */
 }
 .stButton button {
-    width: 100%;
+    width: 100%; /* Default to full width for small screens */
     height: 60px; /* Adjusted height */
     padding: 0;
     margin: 0;
@@ -87,15 +110,98 @@ div[data-testid="stHorizontalBlock"] {
     background-color: var(--color-bg-secondary);
     border-radius: var(--border-radius);
     transition: all 0.2s ease;
-}
-.stButton button:hover:not(:disabled) {
-    border-color: var(--color-text-secondary);
-}
-.stButton button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+    flex-grow: 1; /* Allow buttons to grow */
+    flex-shrink: 0; /* Prevent shrinking too much */
+    flex-basis: calc(20% - 0.75rem); /* Default 5 per row for wider mobile views */
+    min-width: 80px; /* Minimum width for slot button */
 }
 
+/* Specific styling for column layout of slots */
+.stHorizontalBlock {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px; /* Consistent gap */
+    justify-content: flex-start;
+}
+.stHorizontalBlock > div {
+    flex: 1 1 auto; /* Each column item can grow/shrink */
+    min-width: 80px; /* Ensure readability */
+    max-width: 18%; /* Roughly 5 per row for decent screen sizes */
+    box-sizing: border-box; /* Include padding/border in width */
+}
+.stHorizontalBlock > div >.stButton {
+    height: 100%;
+}
+
+.stHorizontalBlock > div >.stButton > button {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Mobile-specific adjustments --- */
+@media (max-width: 768px) { /* Tablets and smaller */
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.1rem; }
+    h3 { font-size: 1rem; }
+
+    /* Adjust padding and font size for inputs on mobile */
+   .stTextInput > div > div > input,
+   .stDateInput > div > div > input,
+   .stTimeInput > div > div > input,
+   .stSelectbox > div > div > div > div {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    /* Smaller padding for cards */
+    div[data-testid="stMetric"], div[data-testid="stAlert"] {
+        padding: 1rem;
+    }
+
+    /* Make columns stack on small screens for better readability */
+   .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns */
+   .stApp > div > div:nth-child(1) > div:nth-child(3) > div { /* Targeting dashboard columns */
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* Full width buttons for primary actions */
+   .stButton > button.primary {
+        width: 100%;
+    }
+
+    /* Slot grid adjustments for mobile */
+   .stHorizontalBlock > div {
+        flex-basis: calc(33.333% - 0.75rem); /* 3 slots per row */
+        max-width: calc(33.333% - 0.75rem);
+    }
+   .stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 480px) { /* Extra small screens / most phones */
+    h1 { font-size: 1.3rem; margin-bottom: 1rem; }
+    h2 { margin-top: 1.5rem; margin-bottom: 0.8rem; }
+
+   .stButton button {
+        height: 50px; /* Slightly smaller height for very small screens */
+        font-size: 1rem;
+    }
+
+    /* Even fewer slots per row for tiny screens */
+   .stHorizontalBlock > div {
+        flex-basis: calc(50% - 0.75rem); /* 2 slots per row */
+        max-width: calc(50% - 0.75rem);
+    }
+   .stHorizontalBlock > div:nth-child(2n) { /* Adjust for last item in row */
+        margin-right: 0;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -208,12 +314,15 @@ for s in slots:
 st.markdown(f"<style>{slot_styles}</style>", unsafe_allow_html=True)
 
 # Display the grid
-num_columns = 10
-rows = [slots[i:i + num_columns] for i in range(0, len(slots), num_columns)]
-for row in rows:
-    cols = st.columns(num_columns)
-    for i, s in enumerate(row):
-        with cols[i]:
+# Use st.columns to create a flexible grid that wraps
+num_columns_desktop = 10
+# For mobile, we'll aim for fewer columns (e.g., 3 or 2)
+# The CSS media queries handle this by adjusting flex-basis
+for i in range(0, len(slots), num_columns_desktop):
+    row_slots = slots[i:i + num_columns_desktop]
+    cols = st.columns(len(row_slots)) # Create columns dynamically based on row length
+    for j, s in enumerate(row_slots):
+        with cols[j]:
             is_blocked = s in blocked_for_selection
             st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
 
