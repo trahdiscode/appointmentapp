@@ -525,7 +525,6 @@ st.markdown(f"""
 <div class="app-header">
     <div class="app-brand">
         <span class="app-brand-name">ParkOS</span>
-        <span class="app-brand-badge">v2</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
