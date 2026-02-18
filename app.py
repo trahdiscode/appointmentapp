@@ -129,19 +129,17 @@ def create_user(u, p):
 # ---------- SESSION STATE INITIALIZATION ----------
 for k in ("user_id", "vehicle_number"):
     if k not in st.session_state: st.session_state[k] = None
-# Use query params to set the selected slot, making the HTML grid clickable
+
 if 'selected_slot' not in st.session_state:
     st.session_state.selected_slot = None
 
 # Check for a slot selection from the URL query parameters
 if "slot" in st.query_params:
     selected = st.query_params["slot"]
-    # If the same slot is clicked again, deselect it
     if st.session_state.selected_slot == selected:
         st.session_state.selected_slot = None
     else:
         st.session_state.selected_slot = selected
-    # Clear query params to prevent re-selection on every refresh
     st.query_params.clear()
 
 # ---------- AUTH PAGE ----------
@@ -165,7 +163,6 @@ if st.session_state.user_id is None:
     st.stop()
 
 # ---------- MAIN APP LAYOUT ----------
-# (Header and Vehicle Number sections are unchanged)
 col1, col2 = st.columns([8, 1])
 with col1: st.title("🅿️ Parking Slot Booking")
 with col2:
@@ -191,7 +188,6 @@ with col1:
     else: st.info("No active parking session.")
 with col2: st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings").fetchone()[0])
 
-# --- BOOKING SECTION ---
 st.header("Book a New Parking Slot")
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 1: Select your desired time frame.</p>", unsafe_allow_html=True)
 booking_date = st.date_input("Select Date", min_value=date.today())
@@ -204,10 +200,8 @@ if exit_time <= entry_time:
     end_dt += timedelta(days=1)
     st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-# --- CLICKABLE LIVE AVAILABILITY GRID (Using HTML) ---
 st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
-active_now = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE? BETWEEN start_datetime AND end_datetime", (datetime.now().strftime("%Y-%m-%d %H:%M"),)).fetchall()}
 blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
 my_active_slot = next((s[0] for s in cur.execute("SELECT slot_number FROM bookings WHERE user_id=? AND? BETWEEN start_datetime AND end_datetime", (st.session_state.user_id, datetime.now().strftime("%Y-%m-%d %H:%M")))), None)
 
@@ -217,25 +211,18 @@ for s in slots:
     is_selected = s == st.session_state.selected_slot
     is_mine_now = s == my_active_slot
 
-    # Determine class and label
     if is_mine_now:
-        label = "YOURS"
-        status_class = "yours"
+        label, status_class = "YOURS", "yours"
     elif is_blocked:
-        label = "BUSY"
-        status_class = "busy"
+        label, status_class = "BUSY", "busy"
     else:
-        label = "FREE"
-        status_class = "free clickable" # Only free slots are clickable
+        label, status_class = "FREE", "free clickable"
 
-    # Add 'selected' class if this slot is selected
     if is_selected and not is_blocked:
         status_class += " selected"
 
-    # Build the HTML for the slot
     slot_div = f"<div class='slot {status_class}'>{s}<br><small>{label}</small></div>"
     
-    # If the slot is not blocked, wrap it in a clickable link
     if not is_blocked:
         grid_html += f"<a href='?slot={s}' class='slot-link'>{slot_div}</a>"
     else:
@@ -251,4 +238,16 @@ if st.session_state.selected_slot:
         st.session_state.selected_slot = None
         st.rerun()
     else:
-        st.info(f"You have selected slot **{st.session_e
+        # --- THIS IS THE FIX ---
+        st.info(f"You have selected slot **{st.session_state.selected_slot}**. Please confirm your booking.", icon="🅿️")
+        if st.button("Confirm Booking", type="primary", use_container_width=True):
+            if cur.execute("SELECT id FROM bookings WHERE user_id=? AND NOT (end_datetime <=? OR start_datetime >=?)", (st.session_state.user_id, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchone():
+                st.error("You already have an overlapping booking.", icon="🚫")
+            else:
+                cur.execute("INSERT INTO bookings (user_id, slot_number, start_datetime, end_datetime) VALUES (?,?,?,?)", (st.session_state.user_id, st.session_state.selected_slot, start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M")))
+                conn.commit()
+                st.success(f"Slot {st.session_state.selected_slot} booked successfully!", icon="✅")
+                st.session_state.selected_slot = None
+                st.rerun()
+else:
+    st.warning("No slot selected. Please choose a time and click an available slot.", icon="👆")
