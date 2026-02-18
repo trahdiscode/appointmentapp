@@ -592,18 +592,10 @@ with dash_col1:
         """, unsafe_allow_html=True)
 
 with dash_col2:
-    # Count active, upcoming
-    n_upcoming = sum(1 for b in user_current_future if datetime.strptime(b[2], "%Y-%m-%d %H:%M") > now_dt)
     st.markdown(f"""
-    <div style="display:flex;flex-direction:column;gap:0.6rem;">
-        <div class="stat-block">
-            <div class="stat-label">Total Bookings</div>
-            <div class="stat-value accent">{total_bookings}</div>
-        </div>
-        <div class="stat-block">
-            <div class="stat-label">Upcoming</div>
-            <div class="stat-value">{n_upcoming}</div>
-        </div>
+    <div class="stat-block">
+        <div class="stat-label">Total Bookings</div>
+        <div class="stat-value accent">{total_bookings}</div>
     </div>
     """, unsafe_allow_html=True)
 
