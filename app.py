@@ -9,48 +9,123 @@ import hashlib
 from datetime import datetime, date, timedelta
 
 # ---------- AUTO REFRESH ----------
-st_autorefresh(interval=5000, key="refresh")
+# st_autorefresh(interval=5000, key="refresh") # Commenting out for cleaner testing, uncomment if needed
 
-# ---------- DARK MODE CSS ----------
+# ---------- DARK MODE CSS (Refined for Professionalism) ----------
 st.markdown("""
 <style>
+/* Overall App Styling */
 .stApp {
-    background-color: #0f1117;
-    color: #e6e6e6;
-    font-family: "Segoe UI", sans-serif;
+    background-color: #0f1117; /* Dark background */
+    color: #f0f2f6; /* Light text for contrast */
+    font-family: 'Segoe UI', 'Roboto', sans-serif; /* Modern, clean font stack */
+    line-height: 1.6;
 }
+
+/* Headings */
+/* Main title - for 'Parking Slot Booking' */
+h1.css-1r6dm7m { /* Target Streamlit's generated <h1> */
+    font-size: 2.5em; /* Slightly larger, impactful */
+    color: #6a6e73; /* Professional dark grey */
+    font-weight: 600; /* Medium bold */
+    border-bottom: 2px solid #30363d; /* Subtle dark border */
+    padding-bottom: 15px; /* Space above border */
+    margin-bottom: 30px; /* Space below title */
+}
+
+/* Dashboard title - for 'Parking Dashboard' */
+h2.css-10trblm { /* Target Streamlit's generated <h2> */
+    font-size: 1.8em; /* Clear, but not as dominant as main title */
+    color: #8b949e; /* Slightly lighter grey */
+    font-weight: 500; /* Regular bold */
+    border-bottom: 1px solid #30363d; /* Lighter border */
+    padding-bottom: 10px;
+    margin-top: 40px; /* More space before section */
+    margin-bottom: 25px;
+}
+
+/* Subheadings */
+h3.css-10trblm { /* Target Streamlit's generated <h3> */
+    font-size: 1.4em;
+    color: #c9d1d9; /* Standard text color for visibility */
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+/* Input Fields */
+.stTextInput > div > div > input,.stDateInput > div > div > input,.stTimeInput > div > div > input,.stSelectbox > div > div > button {
+    background-color: #161b22; /* Darker input background */
+    color: #f0f2f6;
+    border: 1px solid #30363d; /* Subtle border */
+    border-radius: 5px;
+    padding: 10px 12px;
+}
+.stTextInput > div > div > input:focus,.stDateInput > div > div > input:focus,.stTimeInput > div > div > input:focus,.stSelectbox > div > div > button:focus {
+    border-color: #58a6ff; /* Highlight on focus */
+    box-shadow: 0 0 0 0.1rem rgba(88, 166, 255, 0.25);
+}
+
+/* Buttons */
+.stButton > button {
+    background-color: #21262d; /* Dark button background */
+    color: #f0f2f6;
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+.stButton > button:hover {
+    background-color: #30363d; /* Slightly lighter on hover */
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+.stButton > button.primary {
+    background-color: #238636; /* Primary button color */
+    border-color: #238636;
+    color: white;
+}
+.stButton > button.primary:hover {
+    background-color: #2ea043;
+    border-color: #2ea043;
+}
+
+/* Slot Grid Display */
 .slot-grid {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Responsive grid */
+    gap: 12px; /* Slightly increased gap */
     max-width: 900px;
+    margin-top: 20px;
+    margin-bottom: 40px;
 }
 .slot {
-    padding: 14px 0;
+    padding: 18px 0; /* More padding */
     text-align: center;
     border-radius: 6px;
     font-weight: 700;
     color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow for depth */
 }
-.free { background-color: #238636; }
-.busy { background-color: #da3633; }
-.mine { background-color: #1f6feb; }
-small { font-weight: 400; opacity: 0.9; }
+.free { background-color: #28a745; } /* Green */
+.busy { background-color: #dc3545; } /* Red */
+.mine { background-color: #007bff; } /* Blue */
+small {
+    font-weight: 400;
+    opacity: 0.8;
+    font-size: 0.8em; /* Slightly smaller text */
+}
 
-/* Custom styles for headings */
-.main-title {
-    font-size: 2.8em; /* A bit larger */
-    color: #6495ED; /* Cornflower Blue - a distinct color */
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* Subtle shadow */
-    margin-bottom: 20px; /* Space below title */
+/* Messages */
+.stAlert {
+    border-radius: 5px;
 }
-.dashboard-title {
-    font-size: 2em; /* Smaller than main title */
-    color: #3CB371; /* Medium Sea Green - another distinct color */
-    border-bottom: 2px solid #3CB371; /* Underline */
-    padding-bottom: 8px; /* Padding for the underline */
-    margin-bottom: 25px; /* Space below title */
+
+/* Divider */
+.st-emotion-cache-nahz7x { /* Streamlit divider element */
+    background-color: #30363d;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -108,8 +183,8 @@ for k in ("user_id", "vehicle_number"):
 
 # ---------- AUTH ----------
 if st.session_state.user_id is None:
-    # Changed heading to use custom class for distinct styling
-    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
+    # Using st.title for the main heading on the login/register screen
+    st.title("🅿️ Parking Slot Booking")
 
     tab1, tab2 = st.tabs(["Login", "Register"])
 
@@ -139,8 +214,8 @@ if st.session_state.user_id is None:
 # ---------- HEADER ----------
 col1, col2, col3 = st.columns([6, 3, 1])
 with col1:
-    # Changed heading to use custom class for distinct styling
-    st.markdown("<h1 class='main-title'>🅿️ Parking Slot Booking</h1>", unsafe_allow_html=True)
+    # Using st.title for the main heading in the header
+    st.title("🅿️ Parking Slot Booking")
 with col2:
     st.caption(f"Vehicle: **{st.session_state.vehicle_number or 'Not set'}**")
 with col3:
@@ -165,10 +240,10 @@ if st.session_state.vehicle_number is None:
 # ---------- SLOTS ----------
 slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
-# Changed heading to use custom class for distinct styling
-st.markdown("<h3 class='dashboard-title'>🅿️ Parking Dashboard</h3>", unsafe_allow_html=True)
+# Using st.header for the dashboard section heading
+st.header("🅿️ Parking Dashboard")
 
-st.divider()
+st.divider() # Added a divider for clear section separation
 
 # ---------- ACTIVE BOOKING STATUS ----------
 now_dt = datetime.now()
@@ -206,7 +281,7 @@ with col2:
     st.metric("Total Bookings", total)
     
 # ---------- LIVE AVAILABILITY ----------
-st.subheader("📊 Live Slot Availability (Now)")
+st.subheader("📊 Live Slot Availability (Now)") # Using st.subheader
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -237,7 +312,7 @@ grid += "</div>"
 st.markdown(grid, unsafe_allow_html=True)
 
 # ---------- BOOK SLOT ----------
-st.subheader("📅 Book Parking Slot")
+st.subheader("📅 Book Parking Slot") # Using st.subheader
 
 booking_date = st.date_input("Date", min_value=date.today())
 
