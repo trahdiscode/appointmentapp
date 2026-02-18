@@ -300,7 +300,8 @@ hr {
 }
 
 /* Custom styling for the main title and logout button alignment */
-.st-emotion-cache-18ni7ap.e1fqkh3o5 { /* Target the Streamlit main content div */
+/* This targets the div that contains your main Streamlit content */
+.st-emotion-cache-18ni7ap.e1fqkh3o5 {
     width: 100%;
 }
 .header-container {
@@ -322,6 +323,12 @@ hr {
 }
 .header-title.emoji {
     font-size: 2rem; /* Keep emoji size consistent with title */
+}
+/* Adjust the logout button inside the header */
+.header-container.stButton > button {
+    margin-left: auto; /* Push the button to the right */
+    min-width: unset; /* Allow button to shrink if needed */
+    padding: 0.5rem 1rem; /* Adjust padding for better look */
 }
 
 /* --- Mobile-specific adjustments --- */
@@ -402,6 +409,11 @@ hr {
 .header-title {
         width: 100%; /* Make title take full width */
         font-size: 1.8rem;
+    }
+    /* Adjust the logout button inside the mobile header */
+   .header-container.stButton > button {
+        margin-left: unset; /* Remove auto margin on mobile */
+        width: 100%; /* Make it full width */
     }
 }
 
