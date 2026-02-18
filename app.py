@@ -10,11 +10,11 @@ st.set_page_config(page_title="Parking Slot Booking", layout="wide")
 # ---------- AUTO REFRESH (1 SECOND) ----------
 st_autorefresh(interval=1000, key="refresh")
 
-# ---------- UPDATED UI STYLESHEET FOR MOBILE RESPONSIVENESS ----------
+# ---------- UPDATED UI STYLESHEET FOR MOBILE RESPONSIVENESS AND VISUAL APPEAL ----------
 st.markdown("""
 <style>
 /* Import Google Font: Inter */
-@import url('https://fonts.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* --- Root Variables --- */
 :root {
@@ -28,6 +28,7 @@ st.markdown("""
     --color-free: #50A86E; /* Green for free */
     --color-busy: #B9535A; /* Red for busy */
     --border-radius: 6px;
+    --spacing-unit: 1.5rem; /* Base spacing unit */
 }
 
 /* --- Base App Styling --- */
@@ -35,20 +36,52 @@ st.markdown("""
     background-color: var(--color-bg);
     font-family: var(--font-family);
     color: var(--color-text-primary); /* Ensure base text color */
+    padding: var(--spacing-unit); /* Add overall padding to the app */
+}
+.main.block-container {
+    padding-top: var(--spacing-unit);
+    padding-right: var(--spacing-unit);
+    padding-left: var(--spacing-unit);
+    padding-bottom: var(--spacing-unit);
 }
 
 /* --- Typography --- */
 h1, h2, h3 { color: var(--color-text-primary); font-family: var(--font-family); letter-spacing: -0.02em; }
-h1 { font-weight: 600; font-size: 1.75rem; padding-bottom: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
-h2 { font-weight: 500; font-size: 1.25rem; color: var(--color-text-secondary); margin-top: 2.5rem; margin-bottom: 1rem; }
-h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5rem; }
+h1 { 
+    font-weight: 600; 
+    font-size: 2rem; /* Slightly larger for impact */
+    padding-bottom: 0.5rem; 
+    margin-bottom: var(--spacing-unit); 
+    border-bottom: 1px solid var(--color-border); 
+}
+h2 { 
+    font-weight: 500; 
+    font-size: 1.5rem; /* Adjusted for better hierarchy */
+    color: var(--color-text-primary); /* Main headers primary color */
+    margin-top: calc(2 * var(--spacing-unit)); 
+    margin-bottom: 1rem; 
+}
+h3 { 
+    font-weight: 500; 
+    font-size: 1.2rem; /* Adjusted */
+    color: var(--color-text-secondary); 
+    margin-top: var(--spacing-unit); 
+    margin-bottom: 0.5rem; 
+}
+h4 { /* Added for sub-sections like Past Bookings */
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    margin-top: var(--spacing-unit);
+    margin-bottom: 0.75rem;
+}
 
 /* --- Standard UI Elements --- */
 .stTextInput > div > div > input,
 .stDateInput > div > div > input,
 .stTimeInput > div > div > input,
 .stSelectbox > div > div > div > div { /* Target selectbox as well */
-    background-color: var(--color-bg);
+    background-color: var(--color-bg-secondary); /* Input background matching cards */
     color: var(--color-text-primary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
@@ -70,35 +103,117 @@ h3 { font-weight: 500; font-size: 1.1rem; margin-top: 2rem; margin-bottom: 0.5re
     padding: 0.75rem 1.25rem; /* Better button padding */
     font-size: 1rem; /* Readable button text */
     height: auto; /* Allow height to adjust */
+    border-radius: var(--border-radius); /* Consistent border-radius */
 }
 .stButton > button.primary:hover { 
     background-color: #5A9EE8; 
     border-color: #5A9EE8; 
 }
+
+/* Secondary button styling for actions like cancel/end */
+.stButton > button.secondary {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+.stButton > button.secondary:hover:not(:disabled) {
+    background-color: var(--color-bg-secondary);
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+}
+
 /* General button styling for better touch targets */
 .stButton button {
     padding: 0.75rem 1rem;
     font-size: 1rem;
     min-height: 44px; /* Ensure minimum touch target size */
+    border-radius: var(--border-radius); /* Consistent border-radius */
 }
 
-/* --- Card Styling --- */
+/* --- Card Styling (stMetric, stAlert) --- */
 div[data-testid="stMetric"], div[data-testid="stAlert"] {
     background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius);
-    padding: 1.5rem;
+    padding: var(--spacing-unit); /* Consistent padding */
     height: 100%;
+    margin-bottom: var(--spacing-unit); /* Spacing below cards */
 }
-div[data-testid="stAlert"][data-baseweb="alert-success"] { background-color: rgba(34, 129, 74, 0.1); border-color: rgba(34, 129, 74, 0.3); color: var(--color-free); }
-div[data-testid="stAlert"][data-baseweb="alert-info"] { background-color: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.3); color: var(--color-accent); }
-div[data-testid="stAlert"][data-baseweb="alert-warning"] { background-color: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.3); color: #FFC107; }
-div[data-testid="stAlert"][data-baseweb="alert-error"] { background-color: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.3); color: var(--color-busy); }
+div[data-testid="stAlert"] { /* Alerts should visually stand out */
+    padding: 1rem 1.25rem;
+    border-left: 5px solid; /* Stronger border for alerts */
+    background-color: var(--color-bg); /* Use base bg for alerts */
+}
+
+div[data-testid="stAlert"][data-baseweb="alert-success"] { border-color: var(--color-free); background-color: rgba(34, 129, 74, 0.1); color: var(--color-free); }
+div[data-testid="stAlert"][data-baseweb="alert-info"] { border-color: var(--color-accent); background-color: rgba(74, 144, 226, 0.1); color: var(--color-accent); }
+div[data-testid="stAlert"][data-baseweb="alert-warning"] { border-color: #FFC107; background-color: rgba(255, 193, 7, 0.1); color: #FFC107; }
+div[data-testid="stAlert"][data-baseweb="alert-error"] { border-color: var(--color-busy); background-color: rgba(220, 53, 69, 0.1); color: var(--color-busy); }
+
+/* Customizing stMetric for dashboard */
+div[data-testid="stMetric"] label { /* Metric label */
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+div[data-testid="stMetric"] div[data-testid="stMarkdownContainer"] p { /* Metric value */
+    color: var(--color-text-primary);
+    font-size: 2.5rem; /* Larger metric values */
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Customizing the 'Currently Parked' success alert for metric-like display */
+.stAlert.stAlert--success {
+    background-color: var(--color-bg-secondary); /* Darker background for active parking */
+    border-left-color: var(--color-free);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-unit);
+    color: var(--color-free);
+    margin-bottom: var(--spacing-unit); /* Add spacing */
+}
+.stAlert.stAlert--success.stMarkdownContainer p {
+    color: var(--color-text-primary); /* General text in active parking card */
+}
+.stAlert.stAlert--success.stMarkdownContainer strong {
+    color: var(--color-free); /* Highlighted text in active parking card */
+}
+/* Adjusting success alert specific text for better readability */
+.stAlert.stAlert--success.stMarkdownContainer strong:first-child { /* "Currently Parked" */
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--color-free);
+}
+.stAlert.stAlert--success.stMarkdownContainer strong:nth-child(2) { /* "Slot: B5" */
+    font-size: 1.5rem;
+    margin-top: 0.5rem;
+    display: block;
+    color: var(--color-text-primary);
+}
+.stAlert.stAlert--success.stMarkdownContainer strong:nth-child(3) { /* "Until: 05:00 PM" */
+    font-size: 1.1rem;
+    display: block;
+    color: var(--color-text-secondary);
+}
+.stAlert.stAlert--success.stMarkdownContainer strong:last-child { /* "Time Remaining: 0:39:08" */
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+    display: block;
+    color: var(--color-free);
+}
 
 /* --- Styling for st.button used as slots --- */
 div[data-testid="stHorizontalBlock"] {
     gap: 0.75rem;
     flex-wrap: wrap; /* Allow slots to wrap on smaller screens */
+    margin-bottom: var(--spacing-unit); /* Add spacing below the grid */
 }
 .stButton button {
     width: 100%; /* Default to full width for small screens */
@@ -142,11 +257,54 @@ div[data-testid="stHorizontalBlock"] {
     justify-content: center;
 }
 
+/* Manage bookings item styling */
+.manage-booking-item {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 0.75rem; /* Spacing between booking items */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.manage-booking-item > div:first-child { /* Slot number */
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    min-width: 40px; /* Ensure space for slot like B5 */
+}
+.manage-booking-item > div:nth-child(2) { /* Details */
+    flex-grow: 1;
+    color: var(--color-text-secondary);
+}
+.manage-booking-item > div:nth-child(2) > * { /* ensure children take up available space */
+    color: var(--color-text-secondary);
+}
+.manage-booking-item > div:last-child { /* Button column */
+    min-width: 120px; /* Ensure button fits */
+    text-align: right;
+}
+
+/* Separator styling */
+hr {
+    border-top: 1px solid var(--color-border);
+    margin-top: calc(1.5 * var(--spacing-unit));
+    margin-bottom: calc(1.5 * var(--spacing-unit));
+}
+
 /* --- Mobile-specific adjustments --- */
 @media (max-width: 768px) { /* Tablets and smaller */
-    h1 { font-size: 1.5rem; }
-    h2 { font-size: 1.1rem; }
-    h3 { font-size: 1rem; }
+   .stApp {
+        padding: 1rem; /* Less overall padding on mobile */
+    }
+   .main.block-container {
+        padding: 1rem;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.3rem; margin-top: 1.5rem; margin-bottom: 0.8rem; }
+    h3 { font-size: 1.1rem; margin-top: 1rem; margin-bottom: 0.5rem; }
+    h4 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.6rem; }
 
     /* Adjust padding and font size for inputs on mobile */
  .stTextInput > div > div > input,
@@ -160,18 +318,32 @@ div[data-testid="stHorizontalBlock"] {
     /* Smaller padding for cards */
     div[data-testid="stMetric"], div[data-testid="stAlert"] {
         padding: 1rem;
+        margin-bottom: 1rem;
     }
 
     /* Make columns stack on small screens for better readability */
- .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns */
+ .stApp > div > div:nth-child(1) > div:nth-child(2) > div, /* Targeting top level columns (Title & Logout) */
  .stApp > div > div:nth-child(1) > div:nth-child(3) > div { /* Targeting dashboard columns */
         flex-direction: column;
         gap: 1rem;
     }
+    /* Ensure Logout button gets proper styling when stacked */
+   .stApp > div > div:nth-child(1) > div:nth-child(2) > div:last-child {
+        width: 100%;
+        margin-top: 1rem;
+    }
 
-    /* Full width buttons for primary actions */
+    /* Full width primary buttons */
  .stButton > button.primary {
         width: 100%;
+        font-size: 0.95rem;
+        padding: 0.6rem 1rem;
+    }
+    /* Secondary buttons should also adapt */
+   .stButton > button.secondary {
+        width: 100%;
+        font-size: 0.85rem;
+        padding: 0.5rem 0.8rem;
     }
 
     /* Slot grid adjustments for mobile */
@@ -182,11 +354,30 @@ div[data-testid="stHorizontalBlock"] {
  .stHorizontalBlock > div:nth-child(3n) { /* Adjust for last item in row */
         margin-right: 0;
     }
+
+    /* Manage booking item columns to stack */
+   .manage-booking-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+   .manage-booking-item > div:first-child {
+        min-width: unset;
+        width: 100%;
+    }
+   .manage-booking-item > div:nth-child(2) {
+        width: 100%;
+    }
+   .manage-booking-item > div:last-child {
+        width: 100%;
+        text-align: left;
+    }
 }
 
 @media (max-width: 480px) { /* Extra small screens / most phones */
-    h1 { font-size: 1.3rem; margin-bottom: 1rem; }
-    h2 { margin-top: 1.5rem; margin-bottom: 0.8rem; }
+    h1 { font-size: 1.3rem; margin-bottom: 0.75rem; }
+    h2 { margin-top: 1rem; margin-bottom: 0.6rem; }
 
  .stButton button {
         height: 50px; /* Slightly smaller height for very small screens */
@@ -253,25 +444,47 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
 col1, col2 = st.columns([8, 1])
 with col1: st.title("🅿️ Parking Slot Booking")
 with col2:
-    if st.button("Logout"):
+    # Use a transparent background for logout button to blend better
+    st.markdown("""
+    <style>
+   .stButton button[kind="secondaryFormSubmit"] {
+        background-color: var(--color-bg-secondary); /* Match card background */
+        border: 1px solid var(--color-border);
+        color: var(--color-text-secondary);
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+   .stButton button[kind="secondaryFormSubmit"]:hover {
+        background-color: var(--color-accent);
+        border-color: var(--color-accent);
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button("Logout", type="secondary"): # Changed to secondary type for styling
         for key in list(st.session_state.keys()): del st.session_state[key]
         st.rerun()
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
-    v = st.text_input("Enter Vehicle Number (one time requirement)")
-    if st.button("Save Vehicle Number", type="primary"):
-        cur.execute("UPDATE users SET vehicle_number=? WHERE id=?", (v.upper(), st.session_state.user_id)); conn.commit(); st.session_state.vehicle_number = v.upper(); st.rerun()
+    st.info("Please enter your vehicle number to proceed. This is a one-time requirement.", icon="🚗")
+    v = st.text_input("Enter Vehicle Number", placeholder="e.g., TN01 AB1234") # Added placeholder
+    if st.button("Save Vehicle Number", type="primary", use_container_width=True):
+        if v.strip() == "":
+            st.error("Vehicle number cannot be empty.")
+        else:
+            cur.execute("UPDATE users SET vehicle_number=? WHERE id=?", (v.upper(), st.session_state.user_id)); conn.commit(); st.session_state.vehicle_number = v.upper(); st.rerun()
     st.stop()
 
 st.header("Dashboard Overview")
 col1, col2 = st.columns(2)
 now_dt = datetime.now()
 user_has_active_or_future_booking = False
-user_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime >?", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
+# Query for current and future bookings
+user_current_future_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime >? ORDER BY start_datetime", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
 
-if user_bookings:
+if user_current_future_bookings:
     user_has_active_or_future_booking = True
     # Filter for active booking to display in the dashboard metric
-    active_booking_query = next((booking for booking in user_bookings if datetime.strptime(booking[2], "%Y-%m-%d %H:%M") <= now_dt <= datetime.strptime(booking[3], "%Y-%m-%d %H:%M")), None)
+    active_booking_query = next((booking for booking in user_current_future_bookings if datetime.strptime(booking[2], "%Y-%m-%d %H:%M") <= now_dt <= datetime.strptime(booking[3], "%Y-%m-%d %H:%M")), None)
 else:
     active_booking_query = None
 
@@ -279,17 +492,26 @@ with col1:
     if active_booking_query:
         active_booking_id, slot_num, start_time_str, end_time_str = active_booking_query
         end_time = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M")
-        st.success(f"**Currently Parked**\n\n**Slot:** {slot_num}\n\n**Until:** {end_time.strftime('%I:%M %p')}\n\n**Time Remaining:** {str(end_time - now_dt).split('.')[0]}")
+        # Custom display for active parking to fit the design
+        st.success(f"""
+        **Currently Parked**
+
+        **Slot:** {slot_num}
+
+        **Until:** {end_time.strftime('%I:%M %p')}
+
+        **Time Remaining:** {str(end_time - now_dt).split('.')[0]}
+        """, icon="🚗") # Changed icon to car for active parking
     else: 
-        st.info("No active parking session.")
+        st.info("No active parking session.", icon="💤") # Sleepy icon for no active session
 
 with col2: st.metric("Total Lifetime Bookings", cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id=?", (st.session_state.user_id,)).fetchone()[0])
 
 # --- MANAGE BOOKINGS SECTION ---
 st.subheader("Manage Your Bookings")
 
-if user_bookings: # Display current/future bookings here
-    for booking_id, slot_number, start_dt_str, end_dt_str in user_bookings:
+if user_current_future_bookings: # Display current/future bookings here
+    for booking_id, slot_number, start_dt_str, end_dt_str in user_current_future_bookings:
         start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
         end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
         
@@ -301,71 +523,72 @@ if user_bookings: # Display current/future bookings here
             button_label = "End Session Early"
             button_key = f"end_booking_{booking_id}"
             button_help = "Ends your current parking session immediately."
-            button_color = "secondary"
+            button_type = "secondary" 
         elif is_future:
             status_text = "Upcoming"
             button_label = "Cancel Booking"
             button_key = f"cancel_booking_{booking_id}"
             button_help = "Cancels this future booking."
-            button_color = "secondary"
+            button_type = "secondary"
         
-        booking_col1, booking_col2, booking_col3 = st.columns([0.5, 3, 2])
-        with booking_col1:
-            st.markdown(f"**{slot_number}**")
-        with booking_col2:
-            st.markdown(f"*{status_text}* from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
-        with booking_col3:
-            if st.button(button_label, key=button_key, type=button_color, help=button_help):
-                if st.session_state.get(f"confirm_{button_key}", False):
-                    cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
-                    conn.commit()
-                    st.success(f"{'Session ended' if is_active else 'Booking cancelled'} for slot {slot_number}.")
-                    del st.session_state[f"confirm_{button_key}"] # Clear confirmation state
-                    st.session_state.selected_slot = None # Clear any pending selection
-                    st.rerun()
-                else:
-                    st.session_state[f"confirm_{button_key}"] = True
-                    st.warning("Click again to confirm!", icon="⚠️")
-    
-    # Also display past bookings here for completeness, without action buttons
-    past_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
-    if past_bookings:
-        st.markdown("---")
-        st.markdown("#### Past Bookings")
-        for booking_id, slot_number, start_dt_str, end_dt_str in past_bookings:
-            start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
-            end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
-            st.markdown(f"- **{slot_number}** (Completed) from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
-
+        # Use a custom div for each booking item to control layout and styling
+        st.markdown(f"""
+        <div class="manage-booking-item">
+            <div>{slot_number}</div>
+            <div>
+                <p><i>{status_text}</i></p>
+                <p>{start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}</p>
+            </div>
+            <div>
+        """, unsafe_allow_html=True)
+        # Place button inside the HTML div
+        if st.button(button_label, key=button_key, type=button_type, help=button_help):
+            if st.session_state.get(f"confirm_{button_key}", False):
+                cur.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
+                conn.commit()
+                st.success(f"{'Session ended' if is_active else 'Booking cancelled'} for slot {slot_number}.", icon="✅")
+                del st.session_state[f"confirm_{button_key}"] # Clear confirmation state
+                st.session_state.selected_slot = None # Clear any pending selection
+                st.rerun()
+            else:
+                st.session_state[f"confirm_{button_key}"] = True
+                st.warning("Click again to confirm!", icon="⚠️")
+        st.markdown("</div></div>", unsafe_allow_html=True) # Close the HTML div
 else: # No current or future bookings
-    st.info("You have no current or upcoming bookings.")
-    # Show past bookings here too if there are no current/future ones
-    past_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
-    if past_bookings:
-        st.markdown("---")
-        st.markdown("#### Past Bookings")
-        for booking_id, slot_number, start_dt_str, end_dt_str in past_bookings:
-            start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
-            end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
-            st.markdown(f"- **{slot_number}** (Completed) from {start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}")
+    st.info("You have no current or upcoming bookings.", icon="🗓️")
+
+# Display past bookings
+past_bookings = cur.execute("SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC", (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()
+if past_bookings:
+    st.markdown("---") # Visual separator
+    st.subheader("Booking History") # Changed to subheader
+    for booking_id, slot_number, start_dt_str, end_dt_str in past_bookings:
+        start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
+        end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
+        # Simplified display for past bookings
+        st.markdown(f"<div class='manage-booking-item'><div style='color: var(--color-text-secondary);'>{slot_number}</div><div><p><i>Completed</i></p><p>{start_dt_obj.strftime('%Y-%m-%d %I:%M %p')} to {end_dt_obj.strftime('%Y-%m-%d %I:%M %p')}</p></div><div></div></div>", unsafe_allow_html=True)
 
 st.markdown("---") # Separator between sections
 
 # --- Book a New Parking Slot Section (Conditional Display) ---
 if not user_has_active_or_future_booking: # Only show if no active/future bookings
-    st.header("Book a New Parking Slot")
+    st.subheader("Book a New Parking Slot")
     st.markdown("<p style='color: var(--color-text-secondary);'>Step 1: Select your desired time frame.</p>", unsafe_allow_html=True)
-    booking_date = st.date_input("Select Date", min_value=date.today())
-    col1, col2 = st.columns(2)
-    with col1: entry_time = st.time_input("Select Entry Time", value=datetime.now().replace(second=0, microsecond=0).time())
-    with col2: exit_time = st.time_input("Select Exit Time")
+    
+    # Use columns for date/time inputs for better alignment on web
+    col_date, col_entry_time, col_exit_time = st.columns(3)
+    with col_date:
+        booking_date = st.date_input("Select Date", min_value=date.today(), key="booking_date_input")
+    with col_entry_time: 
+        entry_time = st.time_input("Select Entry Time", value=datetime.now().replace(second=0, microsecond=0).time(), key="entry_time_input")
+    with col_exit_time: 
+        exit_time = st.time_input("Select Exit Time", key="exit_time_input")
 
     start_dt, end_dt = datetime.combine(booking_date, entry_time), datetime.combine(booking_date, exit_time)
     if exit_time <= entry_time:
         end_dt += timedelta(days=1)
         st.warning("Exit time is before entry. Booking will extend to the next day.", icon="⚠️")
 
-    # --- CLICKABLE LIVE AVAILABILITY GRID (The Correct Way) ---
     st.markdown("<p style='color: var(--color-text-secondary);'>Step 2: Click an available slot below.</p>", unsafe_allow_html=True)
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
     blocked_for_selection = {r[0] for r in cur.execute("SELECT slot_number FROM bookings WHERE NOT (end_datetime <=? OR start_datetime >=?)", (start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))).fetchall()}
@@ -380,7 +603,6 @@ if not user_has_active_or_future_booking: # Only show if no active/future bookin
         is_blocked = s in blocked_for_selection
         is_selected = s == st.session_state.selected_slot
         
-        # Base selector for this specific button
         selector = f'button[data-testid*="st.button"][data-testid$="slot_{s}"]'
 
         if is_selected:
@@ -400,7 +622,9 @@ if not user_has_active_or_future_booking: # Only show if no active/future bookin
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked_for_selection
-                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot!= s)
+                
+                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     # --- CONFIRMATION SECTION ---
     if st.session_state.selected_slot:
