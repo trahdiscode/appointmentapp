@@ -592,9 +592,30 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 }
 .stTextInput input:focus, .stDateInput input:focus {
     border-color: var(--accent)!important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12)!important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
     outline: none!important;
 }
+/* Override BaseWeb's red/pink focus ring on input containers */
+.stTextInput > div:focus-within,
+.stTextInput > div > div:focus-within {
+    border-color: var(--accent)!important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
+    outline: none!important;
+}
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="base-input"]:focus-within {
+    border-color: var(--accent)!important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important;
+    outline: none!important;
+}
+div[data-baseweb="input"] input:focus,
+div[data-baseweb="base-input"] input:focus {
+    outline: none!important;
+    box-shadow: none!important;
+}
+/* Kill any red/pink coming from BaseWeb theme */
+[data-baseweb="input"] { border-color: var(--border)!important; }
+[data-baseweb="input"]:focus-within { border-color: var(--accent)!important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15)!important; }
 
 /* Selectbox */
 div[data-baseweb="select"] > div {
