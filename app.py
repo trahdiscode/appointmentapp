@@ -1325,10 +1325,7 @@ if not user_has_active_or_future:
     blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
     def handle_slot_click(slot_name):
-        if st.session_state.selected_slot == slot_name:
-            st.session_state.selected_slot = None
-        else:
-            st.session_state.selected_slot = slot_name
+        st.session_state.selected_slot = slot_name
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
 
@@ -1373,8 +1370,7 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
-                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot != s)
-                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
+                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
 
     if st.session_state.selected_slot:
         current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
