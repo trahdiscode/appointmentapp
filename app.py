@@ -1324,40 +1324,47 @@ if not user_has_active_or_future:
                 if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
     blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
-    import json
+    def handle_slot_click(slot_name):
+        if st.session_state.selected_slot == slot_name:
+            st.session_state.selected_slot = None
+        else:
+            st.session_state.selected_slot = slot_name
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
-    selected = st.session_state.selected_slot or ""
 
-    def handle_slot_click(slot_name):
-        st.session_state.selected_slot = slot_name
-
-    # Build per-slot CSS using unique id wrapper divs
-    slot_styles = []
+    # Dynamic slot button styles
+    slot_css = ""
     for s in slots:
         is_blocked = s in blocked
-        is_selected = (s == selected)
-        cid = f"slot-{s}"
+        is_selected = s == st.session_state.selected_slot
+        sel = f'button[data-testid*="slot_{s}"]'
         if is_selected:
-            slot_styles.append(f"#{cid} button {{ background: rgba(59,130,246,0.18) !important; border: 2px solid #3B82F6 !important; color: #3B82F6 !important; font-weight: 700 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important; }}")
+            slot_css += f"""{sel} {{
+                background: var(--accent-soft)!important;
+                border: 1.5px solid var(--accent)!important;
+                color: var(--accent-2)!important;
+                font-weight:700!important;
+            }}\n"""
         elif is_blocked:
-            slot_styles.append(f"#{cid} button {{ background: rgba(239,68,68,0.1) !important; border: 2px solid rgba(239,68,68,0.5) !important; color: #EF4444 !important; }}")
-            slot_styles.append(f"#{cid} button:hover {{ background: rgba(239,68,68,0.1) !important; color: #EF4444 !important; }}")
+            slot_css += f"""{sel} {{
+                background: var(--red-soft)!important;
+                border: 1px solid rgba(239,68,68,0.15)!important;
+                color: var(--red)!important;
+                cursor: not-allowed!important;
+                opacity:0.7!important;
+            }}\n"""
         else:
-            slot_styles.append(f"#{cid} button {{ border-left: 2px solid #10B981 !important; color: #9397B0 !important; }}")
-            slot_styles.append(f"#{cid} button:hover {{ background: rgba(16,185,129,0.08) !important; border-color: #10B981 !important; color: #10B981 !important; }}")
+            slot_css += f"""{sel} {{
+                border-left: 2px solid var(--green)!important;
+                color: var(--text-2)!important;
+            }}\n"""
+            slot_css += f"""{sel}:hover {{
+                background: var(--green-soft)!important;
+                border-color: var(--green)!important;
+                color: var(--green)!important;
+            }}\n"""
 
-    all_css = """[id^="slot-"] button {
-        height: 46px !important; font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.78rem !important; font-weight: 600 !important;
-        background: #0F1117 !important; border: 1px solid #1E2230 !important;
-        border-radius: 8px !important; transition: all 0.15s ease !important;
-        padding: 0 !important; width: 100% !important;
-    }
-    [id^="slot-"] button:disabled {{ opacity: 1 !important; cursor: not-allowed !important; }}
-    """ + " ".join(slot_styles)
-
-    st.markdown(f"<style>{all_css}</style>", unsafe_allow_html=True)
+    st.markdown(f"<style>{slot_css}</style>", unsafe_allow_html=True)
 
     for row_prefix in ['A', 'B']:
         row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
@@ -1366,11 +1373,11 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
-                st.markdown(f'<div id="slot-{s}">', unsafe_allow_html=True)
-                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot != s)
+                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     if st.session_state.selected_slot:
+        current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
         if st.session_state.selected_slot in current_blocked:
             st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
