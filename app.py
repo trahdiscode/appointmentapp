@@ -453,13 +453,13 @@ div[data-testid="stHorizontalBlock"] { gap: 0.5rem!important; }
 }
 
 @media (max-width: 768px) {
-   .main.block-container { padding: 1rem 1.25rem!important; }
-   .stat-grid { grid-template-columns: 1fr 1fr; }
-   .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-   .booking-item { flex-wrap: wrap; }
+  .main.block-container { padding: 1rem 1.25rem!important; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .app-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .booking-item { flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
-   .stat-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -572,7 +572,7 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
     st.stop()
 
 # ── Data ──
-now_dt = datetime.now().replace(second=0, microsecond=0)  # floor to current minute
+now_dt = datetime.now().replace(second=0, microsecond=0) # floor to current minute
 
 def parse_dt(s):
     return datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")
@@ -712,7 +712,7 @@ if not user_has_active_or_future:
 
     # ── REAL-TIME TIME LOGIC ──
     now_dt_fresh = datetime.now()
-    earliest_allowed = get_next_30min_slot(now_dt_fresh)  # round up to next 30-min boundary
+    earliest_allowed = get_next_30min_slot(now_dt_fresh) # round up to next 30-min boundary
 
     col_d, col_en, col_ex = st.columns(3)
 
@@ -728,7 +728,7 @@ if not user_has_active_or_future:
         st.stop()
 
     entry_labels = [label for label, _ in entry_options]
-    entry_times  = [t     for _, t     in entry_options]
+    entry_times = [t for _, t in entry_options]
 
     with col_en:
         entry_label = st.selectbox("Entry Time", entry_labels, index=0, key="entry_select")
@@ -749,10 +749,10 @@ if not user_has_active_or_future:
     # If no exit slots after entry time within same day, we still allow picking early times
     # (booking will auto-extend to next day) — show all slots for clarity
     if not exit_options:
-        exit_options = exit_options_raw  # full wrap-around
+        exit_options = exit_options_raw # full wrap-around
 
     exit_labels = [label for label, _ in exit_options]
-    exit_times  = [t     for _, t     in exit_options]
+    exit_times = [t for _, t in exit_options]
 
     with col_ex:
         # Default to 2 hours (4 slots) after entry if possible
@@ -843,7 +843,7 @@ if not user_has_active_or_future:
         for j, s in enumerate(row_slots):
             with cols[j]:
                 is_blocked = s in blocked
-                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot != s)
+                is_disabled = is_blocked or (st.session_state.selected_slot is not None and st.session_state.selected_slot!= s)
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     # Confirmation
