@@ -1372,8 +1372,9 @@ if not user_has_active_or_future:
 
     if st.session_state.selected_slot:
 
+
+        current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
         if st.session_state.selected_slot in current_blocked:
-            st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
             st.session_state.selected_slot = None
             st.rerun()
         else:
