@@ -573,12 +573,20 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
 
 # ── Data ──
 now_dt = datetime.now()
-user_current_future = cur.execute(
-    "SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime >? ORDER BY start_datetime",
-    (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))
+now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")  # include seconds for precise comparison
+
+# Fetch all user bookings and filter in Python to avoid SQLite string comparison quirks
+all_user_bookings = cur.execute(
+    "SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? ORDER BY start_datetime",
+    (st.session_state.user_id,)
 ).fetchall()
 
-total_bookings = cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id=?", (st.session_state.user_id,)).fetchone()[0]
+user_current_future = [
+    b for b in all_user_bookings
+    if datetime.strptime(b[3], "%Y-%m-%d %H:%M") > now_dt
+]
+
+total_bookings = len(all_user_bookings)
 active_booking = next(
     (b for b in user_current_future
      if datetime.strptime(b[2], "%Y-%m-%d %H:%M") <= now_dt <= datetime.strptime(b[3], "%Y-%m-%d %H:%M")), None
@@ -665,10 +673,10 @@ else:
     st.markdown('<div class="info-empty">No current or upcoming bookings.</div>', unsafe_allow_html=True)
 
 # Past bookings
-past_bookings = cur.execute(
-    "SELECT id, slot_number, start_datetime, end_datetime FROM bookings WHERE user_id=? AND end_datetime <=? ORDER BY start_datetime DESC",
-    (st.session_state.user_id, now_dt.strftime("%Y-%m-%d %H:%M"))
-).fetchall()
+past_bookings = [
+    b for b in sorted(all_user_bookings, key=lambda x: x[2], reverse=True)
+    if datetime.strptime(b[3], "%Y-%m-%d %H:%M") <= now_dt
+]
 
 if past_bookings:
     with st.expander(f"Booking History ({len(past_bookings)})"):
