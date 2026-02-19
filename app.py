@@ -219,15 +219,11 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     margin-bottom: 0.75rem;
 }
 .active-dot {
-    width: 5px; height: 5px;
+    width: 6px; height: 6px;
     background: var(--green);
     border-radius: 50%;
-    animation: pulse-dot 2s ease infinite;
     display: inline-block;
-}
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.75); }
+    box-shadow: 0 0 6px var(--green);
 }
 .active-slot-display {
     display: flex;
@@ -1046,9 +1042,13 @@ now_dt_fresh_ist = datetime.now(ist_timezone).replace(second=0, microsecond=0)
 now_dt = now_dt_fresh_ist
 earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
 
-# ── Fetch bookings ──
-_b = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", st.session_state.user_id).order("start_datetime").execute()
-all_user_bookings = [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in _b.data]
+# ── Fetch bookings (cached for 30s to reduce Supabase calls) ──
+@st.cache_data(ttl=30, show_spinner=False)
+def fetch_bookings(user_id):
+    res = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", user_id).order("start_datetime").execute()
+    return [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in res.data]
+
+all_user_bookings = fetch_bookings(st.session_state.user_id)
 
 total_bookings = len(all_user_bookings)
 user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
@@ -1194,6 +1194,7 @@ if user_current_future:
             if st.button(btn_label, key=btn_key, type="secondary", use_container_width=True):
                 if st.session_state.get(f"confirm_{btn_key}", False):
                     supabase.table("bookings").delete().eq("id", booking_id).execute()
+                    st.cache_data.clear()
                     del st.session_state[f"confirm_{btn_key}"]
                     st.session_state.selected_slot = None
                     st.rerun()
@@ -1300,10 +1301,12 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    _bl = supabase.table("bookings").select("slot_number").execute()
-    blocked = {r["slot_number"] for r in _bl.data
-               if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
-                       or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
+    @st.cache_data(ttl=15, show_spinner=False)
+    def fetch_blocked(start_str, end_str):
+        _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
+        return {r["slot_number"] for r in _bl.data
+                if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
+    blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
     def handle_slot_click(slot_name):
         if st.session_state.selected_slot == slot_name:
@@ -1358,10 +1361,7 @@ if not user_has_active_or_future:
                 st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_disabled, use_container_width=True)
 
     if st.session_state.selected_slot:
-        _cb = supabase.table("bookings").select("slot_number").execute()
-        current_blocked = {r["slot_number"] for r in _cb.data
-                           if not (r["end_datetime"] <= start_dt.strftime("%Y-%m-%d %H:%M")
-                                   or r["start_datetime"] >= end_dt.strftime("%Y-%m-%d %H:%M"))}
+        current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
         if st.session_state.selected_slot in current_blocked:
             st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
@@ -1388,6 +1388,7 @@ if not user_has_active_or_future:
                             "start_datetime": start_dt.strftime("%Y-%m-%d %H:%M"),
                             "end_datetime": end_dt.strftime("%Y-%m-%d %H:%M")
                         }).execute()
+                        st.cache_data.clear()
                         st.success(f"✅ Slot {st.session_state.selected_slot} booked successfully!")
                         st.session_state.selected_slot = None
                         st.rerun()
