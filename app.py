@@ -3,6 +3,7 @@ import sqlite3
 import hashlib
 from datetime import datetime, date, timedelta
 from streamlit_autorefresh import st_autorefresh
+import pytz # <--- You need this import
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️")
@@ -572,10 +573,34 @@ if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number i
     st.stop()
 
 # ── Data ──
-now_dt = datetime.now().replace(second=0, microsecond=0) # floor to current minute
+# Define the Indian Standard Time timezone
+ist_timezone = pytz.timezone('Asia/Kolkata') # <--- New: define IST timezone
+
+# Get the current time in IST
+# Use now(ist_timezone) instead of naive now()
+now_dt_fresh_ist = datetime.now(ist_timezone).replace(second=0, microsecond=0) # <--- Modified
+
+# Floor to current minute for display and comparison, but keep timezone awareness
+now_dt = now_dt_fresh_ist
+
+# Re-define get_next_30min_slot to be timezone-aware
+def get_next_30min_slot_ist(dt_ist):
+    """Round up a timezone-aware datetime to the next 30-minute boundary."""
+    minutes = dt_ist.minute
+    if minutes == 0:
+        return dt_ist.replace(second=0, microsecond=0)
+    elif minutes <= 30:
+        return dt_ist.replace(minute=30, second=0, microsecond=0)
+    else:
+        # Ensure it stays timezone-aware
+        return (dt_ist + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+# Use the timezone-aware version for earliest_allowed
+earliest_allowed = get_next_30min_slot_ist(now_dt_fresh_ist) # <--- Modified
 
 def parse_dt(s):
-    return datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")
+    # When parsing stored datetimes, they are naive, so localize them to IST for comparison
+    return ist_timezone.localize(datetime.strptime(s.strip(), "%Y-%m-%d %H:%M")) # <--- Modified
 
 # Fetch ALL bookings for user, filter in Python (avoids SQLite string comparison bugs)
 all_user_bookings = cur.execute(
@@ -607,7 +632,8 @@ dash_col1, dash_col2 = st.columns([1.6, 1])
 with dash_col1:
     if active_booking:
         _, slot_num, start_str, end_str = active_booking
-        end_dt = datetime.strptime(end_str, "%Y-%m-%d %H:%M")
+        # Make sure parsed datetimes are also timezone-aware before subtraction
+        end_dt = parse_dt(end_str) # This is already handled by the modified parse_dt function
         remaining = end_dt - now_dt
         remaining_str = str(remaining).split('.')[0]
         st.markdown(f"""
@@ -642,8 +668,9 @@ st.markdown('<span class="section-label">Your Bookings</span>', unsafe_allow_htm
 
 if user_current_future:
     for booking_id, slot_number, start_dt_str, end_dt_str in user_current_future:
-        start_dt_obj = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
-        end_dt_obj = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
+        # These will now be timezone-aware due to modified parse_dt
+        start_dt_obj = parse_dt(start_dt_str)
+        end_dt_obj = parse_dt(end_dt_str)
         is_active = (start_dt_obj <= now_dt <= end_dt_obj)
         is_future = (start_dt_obj > now_dt)
 
@@ -684,8 +711,9 @@ past_bookings = past_bookings_list
 if past_bookings:
     with st.expander(f"Booking History ({len(past_bookings)})"):
         for _, slot_number, start_dt_str, end_dt_str in past_bookings:
-            s = datetime.strptime(start_dt_str, "%Y-%m-%d %H:%M")
-            e = datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M")
+            # These will now be timezone-aware due to modified parse_dt
+            s = parse_dt(start_dt_str)
+            e = parse_dt(end_dt_str)
             st.markdown(f"""
             <div class="booking-item" style="opacity:0.6;">
                 <div class="booking-slot" style="color:var(--text-3);">{slot_number}</div>
@@ -711,8 +739,9 @@ if not user_has_active_or_future:
     """, unsafe_allow_html=True)
 
     # ── REAL-TIME TIME LOGIC ──
-    now_dt_fresh = datetime.now()
-    earliest_allowed = get_next_30min_slot(now_dt_fresh) # round up to next 30-min boundary
+    # Using the IST timezone-aware now_dt_fresh_ist and earliest_allowed from above
+    # now_dt_fresh = datetime.now() # Original line, now replaced by now_dt_fresh_ist
+    # earliest_allowed = get_next_30min_slot(now_dt_fresh) # Original line, now replaced by earliest_allowed (IST)
 
     col_d, col_en, col_ex = st.columns(3)
 
@@ -720,6 +749,7 @@ if not user_has_active_or_future:
         booking_date = st.date_input("Date", min_value=date.today(), key="booking_date_input")
 
     # Build entry time options — filter past times if booking today
+    # Pass the timezone-aware earliest_allowed to build_time_options
     entry_options = build_time_options(booking_date, min_dt=earliest_allowed)
 
     if not entry_options:
@@ -734,7 +764,8 @@ if not user_has_active_or_future:
         entry_label = st.selectbox("Entry Time", entry_labels, index=0, key="entry_select")
 
     selected_entry_time = entry_times[entry_labels.index(entry_label)]
-    start_dt = datetime.combine(booking_date, selected_entry_time)
+    # Combine date and time, then localize to IST
+    start_dt = ist_timezone.localize(datetime.combine(booking_date, selected_entry_time)) # <--- Modified
 
     # Build exit time options — must be strictly after entry time
     # For today: also filter past times. For future dates: all times after entry.
@@ -760,7 +791,8 @@ if not user_has_active_or_future:
         exit_label = st.selectbox("Exit Time", exit_labels, index=default_exit_idx, key="exit_select")
 
     selected_exit_time = exit_times[exit_labels.index(exit_label)]
-    end_dt = datetime.combine(booking_date, selected_exit_time)
+    # Combine date and time, then localize to IST
+    end_dt = ist_timezone.localize(datetime.combine(booking_date, selected_exit_time)) # <--- Modified
 
     next_day_note = False
     if selected_exit_time <= selected_entry_time:
@@ -768,7 +800,8 @@ if not user_has_active_or_future:
         next_day_note = True
 
     # ── VALIDATE: start must not be in the past ──
-    if start_dt < now_dt_fresh:
+    # Compare with the timezone-aware now_dt_fresh_ist
+    if start_dt < now_dt_fresh_ist: # <--- Modified
         st.markdown('<div class="warn-note">⚠️ Entry time is in the past. Please select a current or future time.</div>', unsafe_allow_html=True)
         st.stop()
 
@@ -869,7 +902,8 @@ if not user_has_active_or_future:
             """, unsafe_allow_html=True)
             if st.button("Confirm Booking →", type="primary", use_container_width=True):
                 # Final real-time guard: reject if start is now in the past
-                if start_dt < datetime.now():
+                # Compare with the timezone-aware now_dt_fresh_ist
+                if start_dt < now_dt_fresh_ist: # <--- Modified
                     st.error("Your selected start time has just passed. Please pick a new time.")
                     st.session_state.selected_slot = None
                     st.rerun()
