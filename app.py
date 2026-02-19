@@ -1324,144 +1324,53 @@ if not user_has_active_or_future:
                 if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
     blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
-    import streamlit.components.v1 as components
     import json
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
     selected = st.session_state.selected_slot or ""
 
-    # Check for slot selection coming from the iframe via query param
-    if "sel" in st.query_params:
-        chosen = st.query_params["sel"]
-        if chosen in slots and chosen not in blocked:
-            st.session_state.selected_slot = chosen
-        del st.query_params["sel"]
-        st.rerun()
+    def handle_slot_click(slot_name):
+        st.session_state.selected_slot = slot_name
 
-    # Build slot state list for JS
-    slot_states = {}
+    # Build per-slot CSS using unique id wrapper divs
+    slot_styles = []
     for s in slots:
-        if s in blocked:
-            slot_states[s] = "blocked"
-        elif s == selected:
-            slot_states[s] = "selected"
+        is_blocked = s in blocked
+        is_selected = (s == selected)
+        cid = f"slot-{s}"
+        if is_selected:
+            slot_styles.append(f"#{cid} button {{ background: rgba(59,130,246,0.18) !important; border: 2px solid #3B82F6 !important; color: #3B82F6 !important; font-weight: 700 !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.12) !important; }}")
+        elif is_blocked:
+            slot_styles.append(f"#{cid} button {{ background: rgba(239,68,68,0.1) !important; border: 2px solid rgba(239,68,68,0.5) !important; color: #EF4444 !important; }}")
+            slot_styles.append(f"#{cid} button:hover {{ background: rgba(239,68,68,0.1) !important; color: #EF4444 !important; }}")
         else:
-            slot_states[s] = "free"
+            slot_styles.append(f"#{cid} button {{ border-left: 2px solid #10B981 !important; color: #9397B0 !important; }}")
+            slot_styles.append(f"#{cid} button:hover {{ background: rgba(16,185,129,0.08) !important; border-color: #10B981 !important; color: #10B981 !important; }}")
 
-    # Get current page URL base for query param trick
-    slot_states_json = json.dumps(slot_states)
+    all_css = """[id^="slot-"] button {
+        height: 46px !important; font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.78rem !important; font-weight: 600 !important;
+        background: #0F1117 !important; border: 1px solid #1E2230 !important;
+        border-radius: 8px !important; transition: all 0.15s ease !important;
+        padding: 0 !important; width: 100% !important;
+    }
+    [id^="slot-"] button:disabled {{ opacity: 1 !important; cursor: not-allowed !important; }}
+    """ + " ".join(slot_styles)
 
-    grid_html = f"""<!DOCTYPE html>
-<html>
-<head>
-<style>
-  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  body {{ background: transparent; padding: 2px; }}
-  .row-label {{
-    font-family: 'Outfit', sans-serif;
-    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: #4B5068;
-    display: flex; align-items: center; gap: 5px;
-    margin-bottom: 5px; margin-top: 10px;
-  }}
-  .row-label:first-child {{ margin-top: 0; }}
-  .row-label::before {{
-    content: ''; width: 3px; height: 9px;
-    background: #6366F1; border-radius: 99px; display: inline-block;
-  }}
-  .grid {{
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 4px;
-  }}
-  .slot {{
-    height: 42px; border-radius: 7px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    user-select: none;
-    border: 1px solid #1E2230;
-    background: #0F1117;
-    color: #9397B0;
-  }}
-  .slot.free {{
-    border-left: 2px solid #10B981;
-  }}
-  .slot.free:hover {{
-    background: rgba(16,185,129,0.1);
-    border-color: #10B981;
-    color: #10B981;
-  }}
-  .slot.selected {{
-    background: rgba(59,130,246,0.18);
-    border: 2px solid #3B82F6;
-    color: #3B82F6;
-    font-weight: 700;
-    box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
-  }}
-  .slot.blocked {{
-    background: rgba(239,68,68,0.1);
-    border: 2px solid rgba(239,68,68,0.5);
-    color: #EF4444;
-    cursor: not-allowed;
-  }}
-</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script>
-    const states = {slot_states_json};
-    const rows = {{ A: [], B: [] }};
-    Object.keys(states).forEach(name => {{
-      rows[name[0]].push(name);
-    }});
+    st.markdown(f"<style>{all_css}</style>", unsafe_allow_html=True)
 
-    const root = document.getElementById('root');
-
-    ['A','B'].forEach(row => {{
-      const lbl = document.createElement('div');
-      lbl.className = 'row-label';
-      lbl.textContent = 'ROW ' + row;
-      root.appendChild(lbl);
-
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-
-      rows[row].forEach(name => {{
-        const state = states[name];
-        const el = document.createElement('div');
-        el.className = 'slot ' + state;
-        el.textContent = name;
-        el.id = 'slot-' + name;
-
-        if (state !== 'blocked') {{
-          el.addEventListener('click', () => {{
-            // Update visual immediately
-            document.querySelectorAll('.slot.selected').forEach(s => {{
-              s.className = 'slot free';
-            }});
-            el.className = 'slot selected';
-
-            // Tell Streamlit via query param navigation
-            const url = new URL(window.parent.location.href);
-            url.searchParams.set('sel', name);
-            window.parent.location.assign(url.toString());
-          }});
-        }}
-        grid.appendChild(el);
-      }});
-      root.appendChild(grid);
-    }});
-  </script>
-</body>
-</html>"""
-
-    components.html(grid_html, height=145, scrolling=False)
+    for row_prefix in ['A', 'B']:
+        row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
+        st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
+        cols = st.columns(10)
+        for j, s in enumerate(row_slots):
+            with cols[j]:
+                is_blocked = s in blocked
+                st.markdown(f'<div id="slot-{s}">', unsafe_allow_html=True)
+                st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), disabled=is_blocked, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.selected_slot:
-        current_blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
         if st.session_state.selected_slot in current_blocked:
             st.error(f"Slot {st.session_state.selected_slot} is no longer available. Please choose another.")
