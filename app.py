@@ -681,9 +681,9 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     padding: 0 0.75rem!important;
 }
 .stButton > button[kind="secondary"]:hover {
-    border-color: var(--red)!important;
-    color: var(--red)!important;
-    background: rgba(239,68,68,0.06)!important;
+    border-color: #3B82F6!important;
+    color: #3B82F6!important;
+    background: rgba(59,130,246,0.08)!important;
 }
 
 /* Slot buttons */
