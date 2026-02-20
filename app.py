@@ -1329,12 +1329,11 @@ if not user_has_active_or_future:
     </div>
     """, unsafe_allow_html=True)
 
-    @st.cache_data(ttl=15, show_spinner=False)
-    def fetch_blocked(start_str, end_str):
-        _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
-        return {r["slot_number"] for r in _bl.data
-                if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
-    blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
+    _bl = supabase.table("bookings").select("slot_number, start_datetime, end_datetime").execute()
+    start_str = start_dt.strftime("%Y-%m-%d %H:%M")
+    end_str = end_dt.strftime("%Y-%m-%d %H:%M")
+    blocked = {r["slot_number"] for r in _bl.data
+               if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
     selected = st.session_state.selected_slot or ""
