@@ -185,6 +185,22 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 0.5rem;
 }
+.signout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+}
+.signout-btn:hover {
+    border-color: #EF4444;
+    color: #EF4444;
+}
 .user-pill {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -1063,16 +1079,16 @@ st.markdown(f"""
             <div class="user-avatar">{avatar_letter}</div>
             {username}
         </div>
+        <a href="?signout=1" class="signout-btn">Sign Out</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Sign out — right-aligned using columns
-col_so1, col_so2 = st.columns([3, 1])
-with col_so2:
-    if st.button("Sign Out", type="secondary", use_container_width=True):
-        for key in list(st.session_state.keys()): del st.session_state[key]
-        st.rerun()
+# Handle sign out via query param
+if "signout" in st.query_params:
+    for key in list(st.session_state.keys()): del st.session_state[key]
+    st.query_params.clear()
+    st.rerun()
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
