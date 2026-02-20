@@ -693,6 +693,13 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     border: none!important;
     color: #fff!important;
     box-shadow: var(--shadow-accent)!important;
+    -webkit-tap-highlight-color: transparent!important;
+    touch-action: manipulation!important;
+}
+[data-testid="stFormSubmitButton"] > button:active {
+    transform: scale(0.97)!important;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3)!important;
+    transition: transform 0.08s ease, box-shadow 0.08s ease!important;
 }
 .stButton > button[kind="primary"]:hover {
     box-shadow: 0 6px 24px rgba(99,102,241,0.4)!important;
@@ -996,7 +1003,8 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
             st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
             submitted = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
         if submitted:
-            user = get_user(u, p)
+            with st.spinner(""):
+                user = get_user(u, p)
             if user:
                 st.session_state.user_id = user[0]
                 st.session_state.vehicle_number = user[1]
