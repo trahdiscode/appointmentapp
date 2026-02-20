@@ -186,13 +186,13 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     gap: 0.5rem;
 }
 .signout-btn {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.3);
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.3);
     border-radius: 8px;
     padding: 6px 14px;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #F87171;
+    color: var(--accent-2);
     cursor: pointer;
     transition: all 0.18s;
     text-decoration: none;
@@ -201,9 +201,9 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     -webkit-tap-highlight-color: transparent;
 }
 .signout-btn:hover {
-    background: rgba(239,68,68,0.15);
-    border-color: rgba(239,68,68,0.6);
-    color: #EF4444;
+    background: rgba(99,102,241,0.2);
+    border-color: rgba(99,102,241,0.6);
+    color: #fff;
 }
 .user-pill {
     background: var(--surface-2);
@@ -1003,21 +1003,25 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Welcome back</div>
         <div class="lp-sub">Sign in to manage your parking sessions</div>
         """, unsafe_allow_html=True)
-        with st.form("login_form"):
-            u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
-            p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
-            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
-        if submitted:
-            with st.spinner(""):
+
+        @st.fragment
+        def login_fragment():
+            with st.form("login_form"):
+                u = st.text_input("Username", placeholder="Enter your username", label_visibility="collapsed")
+                p = st.text_input("Password", type="password", placeholder="Enter your password", label_visibility="collapsed")
+                st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+                submitted = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
+            if submitted:
                 user = get_user(u, p)
-            if user:
-                st.session_state.user_id = user[0]
-                st.session_state.vehicle_number = user[1]
-                st.session_state.username = u
-                st.rerun()
-            else:
-                st.error("Incorrect username or password.")
+                if user:
+                    st.session_state.user_id = user[0]
+                    st.session_state.vehicle_number = user[1]
+                    st.session_state.username = u
+                    st.rerun()
+                else:
+                    st.error("Incorrect username or password.")
+
+        login_fragment()
         st.markdown("""<div class="lp-divider">
             <div class="lp-divider-line"></div>
             <div class="lp-divider-text">No account yet?</div>
