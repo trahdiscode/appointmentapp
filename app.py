@@ -2,7 +2,6 @@ import streamlit as st
 from supabase import create_client, Client
 import hashlib
 from datetime import datetime, date, timedelta
-from streamlit_autorefresh import st_autorefresh
 import pytz
 
 # ---------- LOGO ----------
@@ -11,13 +10,13 @@ LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAASwCAYAAADrIbPPAA
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", initial_sidebar_state="collapsed")
 
-# ---------- AUTO REFRESH ----------
-st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s — countdown handled by JS
 
 # ---------- STYLESHEET ----------
 st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
     --bg: #080A0F;
@@ -805,7 +804,6 @@ div[data-baseweb="calendar"] { background: var(--surface-2)!important; border: 1
 
 # ---------- DATABASE ----------
 @st.cache_resource
-@st.cache_resource
 def init_supabase() -> Client:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -1036,26 +1034,31 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Create your account</div>
         <div class="lp-sub">Join ParkOS and start parking smarter today</div>
         """, unsafe_allow_html=True)
-        import re
-        with st.form("register_form"):
-            raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
-            p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
-            st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-            reg_submitted = st.form_submit_button("Create Account →", type="primary", use_container_width=True)
-        # Sanitize: spaces → underscore, keep only letters/numbers/dot/underscore
-        u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
-        if u != raw_u and raw_u:
-            st.caption(f"Username will be saved as: **{u}**")
-        if reg_submitted:
-            if u.strip() and p.strip():
-                if create_user(u, p):
-                    st.success("✅ Account created! Sign in to continue.")
-                    st.session_state.auth_mode = 'signin'
-                    st.rerun()
+
+        @st.fragment
+        def register_fragment():
+            import re
+            with st.form("register_form"):
+                raw_u = st.text_input("Username", placeholder="Choose a username", label_visibility="collapsed")
+                p = st.text_input("Password", type="password", placeholder="Choose a strong password", label_visibility="collapsed")
+                st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+                reg_submitted = st.form_submit_button("Create Account →", type="primary", use_container_width=True)
+            u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
+            if u != raw_u and raw_u:
+                st.caption(f"Username will be saved as: **{u}**")
+            if reg_submitted:
+                if u.strip() and p.strip():
+                    if create_user(u, p):
+                        st.success("✅ Account created! Sign in to continue.")
+                        st.session_state.auth_mode = 'signin'
+                        st.rerun()
+                    else:
+                        st.error("That username is already taken.")
                 else:
-                    st.error("That username is already taken.")
-            else:
-                st.error("Please fill in all fields.")
+                    st.error("Please fill in all fields.")
+
+        register_fragment()
+
         st.markdown("""<div class="lp-divider">
             <div class="lp-divider-line"></div>
             <div class="lp-divider-text">Already have an account?</div>
@@ -1139,7 +1142,7 @@ now_dt = now_dt_fresh_ist
 earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
 
 # ── Fetch bookings (cached for 30s to reduce Supabase calls) ──
-@st.cache_data(ttl=30, show_spinner=False)
+@st.cache_data(ttl=20, show_spinner=False)
 def fetch_bookings(user_id):
     res = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", user_id).order("start_datetime").execute()
     return [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in res.data]
