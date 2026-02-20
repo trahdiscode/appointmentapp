@@ -1067,9 +1067,9 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Sign out tucked neatly below header
-col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
-with col_so3:
+# Sign out — right-aligned using columns
+col_so1, col_so2 = st.columns([3, 1])
+with col_so2:
     if st.button("Sign Out", type="secondary", use_container_width=True):
         for key in list(st.session_state.keys()): del st.session_state[key]
         st.rerun()
