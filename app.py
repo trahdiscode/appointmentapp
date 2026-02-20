@@ -1342,16 +1342,50 @@ if not user_has_active_or_future:
     def handle_slot_click(slot_name):
         st.session_state.selected_slot = slot_name
 
-    for row_prefix in ['A', 'B']:
-        row_slots = [f"{row_prefix}{i}" for i in range(1, 11)]
-        st.markdown(f'<div class="row-label">Row {row_prefix}</div>', unsafe_allow_html=True)
-        cols = st.columns(10)
-        for j, s in enumerate(row_slots):
-            with cols[j]:
+    # Both rows rendered together in one 20-col grid, smaller slots
+    st.markdown("""<style>
+    div[data-testid="stHorizontalBlock"] button {
+        height: 34px !important;
+        font-size: 0.68rem !important;
+        padding: 0 !important;
+        min-height: unset !important;
+    }
+    </style>""", unsafe_allow_html=True)
+
+    all_slots_ordered = [(f"A{i}", f"B{i}") for i in range(1, 11)]
+
+    st.markdown('<div class="row-label" style="margin-bottom:4px;">Rows A &amp; B</div>', unsafe_allow_html=True)
+
+    col_a, col_sep, col_b = st.columns([10, 0.3, 10])
+
+    with col_a:
+        st.markdown('<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4B5068;margin-bottom:4px;">ROW A</div>', unsafe_allow_html=True)
+        cols_a = st.columns(10)
+        for j in range(10):
+            s = f"A{j+1}"
+            with cols_a[j]:
                 is_blocked = s in blocked
                 is_selected = (s == selected)
                 if is_blocked:
-                    st.markdown(f'''<div style="height:46px;border-radius:8px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.78rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>''', unsafe_allow_html=True)
+                    st.markdown(f'<div style="height:34px;border-radius:6px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.65rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>', unsafe_allow_html=True)
+                elif is_selected:
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
+                else:
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
+
+    with col_sep:
+        st.markdown('<div style="width:1px;background:rgba(255,255,255,0.07);height:60px;margin:auto;margin-top:20px;"></div>', unsafe_allow_html=True)
+
+    with col_b:
+        st.markdown('<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4B5068;margin-bottom:4px;">ROW B</div>', unsafe_allow_html=True)
+        cols_b = st.columns(10)
+        for j in range(10):
+            s = f"B{j+1}"
+            with cols_b[j]:
+                is_blocked = s in blocked
+                is_selected = (s == selected)
+                if is_blocked:
+                    st.markdown(f'<div style="height:34px;border-radius:6px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.65rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>', unsafe_allow_html=True)
                 elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 else:
