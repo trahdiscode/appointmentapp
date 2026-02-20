@@ -1391,7 +1391,7 @@ if not user_has_active_or_future:
                 is_blocked = s in blocked
                 is_selected = (s == selected)
                 if is_blocked:
-                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,rgba(239,68,68,0.35) 0%,rgba(239,68,68,0.18) 100%);color:#FCA5A5;font-size:0.62rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 0 0 1px rgba(239,68,68,0.3);">{s}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="height:36px;border-radius:8px;border:none;background:linear-gradient(135deg,#EF4444 0%,#F87171 100%);color:#fff;font-size:0.62rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(239,68,68,0.25);">{s}</div>', unsafe_allow_html=True)
                 elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 else:
