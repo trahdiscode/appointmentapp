@@ -792,6 +792,7 @@ div[data-baseweb="calendar"] { background: var(--surface-2)!important; border: 1
 
 # ---------- DATABASE ----------
 @st.cache_resource
+@st.cache_resource
 def init_supabase() -> Client:
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -802,6 +803,7 @@ supabase = init_supabase()
 # ---------- HELPERS ----------
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 
+@st.cache_data(ttl=30, show_spinner=False)
 def get_user(u, p):
     res = supabase.table("users").select("id, vehicle_number").eq("username", u).eq("password_hash", hash_password(p)).execute()
     if res.data:
