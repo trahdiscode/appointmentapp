@@ -1342,54 +1342,51 @@ if not user_has_active_or_future:
     def handle_slot_click(slot_name):
         st.session_state.selected_slot = slot_name
 
-    # Both rows rendered together in one 20-col grid, smaller slots
-    st.markdown("""<style>
-    div[data-testid="stHorizontalBlock"] button {
-        height: 34px !important;
-        font-size: 0.68rem !important;
-        padding: 0 !important;
-        min-height: unset !important;
-    }
-    </style>""", unsafe_allow_html=True)
+    # Handle slot click from HTML grid
+    if "sel" in st.query_params:
+        val = st.query_params["sel"]
+        if val in slots and val not in blocked:
+            st.session_state.selected_slot = val
+            selected = val
+        st.query_params.clear()
+        st.rerun()
 
-    all_slots_ordered = [(f"A{i}", f"B{i}") for i in range(1, 11)]
+    # Build pure HTML grid - works on mobile, no st.columns stacking
+    row_a_cells = ""
+    row_b_cells = ""
+    for i in range(1, 11):
+        for prefix, row_cells_var in [("A", "row_a"), ("B", "row_b")]:
+            s = f"{prefix}{i}"
+            if s in blocked:
+                style = "background:rgba(239,68,68,0.08);border:2px solid rgba(239,68,68,0.6);color:#EF4444;cursor:not-allowed;"
+                onclick = ""
+            elif s == selected:
+                style = "background:rgba(99,102,241,0.18);border:2px solid #6366F1;color:#818CF8;font-weight:700;"
+                onclick = f"onclick=\"window.location.href='?sel={s}'\""
+            else:
+                style = "background:#0F1117;border:1px solid #1E2230;color:#9397B0;cursor:pointer;"
+                onclick = f"onclick=\"window.location.href='?sel={s}'\""
+            cell = f'<div style="height:36px;border-radius:6px;font-size:0.7rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;{style}" {onclick}>{s}</div>'
+            if prefix == "A":
+                row_a_cells += cell
+            else:
+                row_b_cells += cell
 
-    st.markdown('<div class="row-label" style="margin-bottom:4px;">Rows A &amp; B</div>', unsafe_allow_html=True)
-
-    col_a, col_sep, col_b = st.columns([10, 0.3, 10])
-
-    with col_a:
-        st.markdown('<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4B5068;margin-bottom:4px;">ROW A</div>', unsafe_allow_html=True)
-        cols_a = st.columns(10)
-        for j in range(10):
-            s = f"A{j+1}"
-            with cols_a[j]:
-                is_blocked = s in blocked
-                is_selected = (s == selected)
-                if is_blocked:
-                    st.markdown(f'<div style="height:34px;border-radius:6px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.65rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>', unsafe_allow_html=True)
-                elif is_selected:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
-                else:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
-
-    with col_sep:
-        st.markdown('<div style="width:1px;background:rgba(255,255,255,0.07);height:60px;margin:auto;margin-top:20px;"></div>', unsafe_allow_html=True)
-
-    with col_b:
-        st.markdown('<div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4B5068;margin-bottom:4px;">ROW B</div>', unsafe_allow_html=True)
-        cols_b = st.columns(10)
-        for j in range(10):
-            s = f"B{j+1}"
-            with cols_b[j]:
-                is_blocked = s in blocked
-                is_selected = (s == selected)
-                if is_blocked:
-                    st.markdown(f'<div style="height:34px;border-radius:6px;border:2px solid rgba(239,68,68,0.6);background:rgba(239,68,68,0.08);color:#EF4444;font-size:0.65rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:monospace;">{s}</div>', unsafe_allow_html=True)
-                elif is_selected:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
-                else:
-                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
+    grid_html = f'''
+    <div style="margin-bottom:6px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4B5068;margin-bottom:5px;display:flex;align-items:center;gap:5px;">
+        <span style="width:3px;height:9px;background:#6366F1;border-radius:99px;display:inline-block;"></span>ROW A
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;">{row_a_cells}</div>
+    </div>
+    <div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4B5068;margin-bottom:5px;display:flex;align-items:center;gap:5px;">
+        <span style="width:3px;height:9px;background:#6366F1;border-radius:99px;display:inline-block;"></span>ROW B
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;">{row_b_cells}</div>
+    </div>
+    '''
+    st.markdown(grid_html, unsafe_allow_html=True)
 
 
 
