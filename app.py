@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client, Client
 import hashlib
 from datetime import datetime, date, timedelta
+from streamlit_autorefresh import st_autorefresh
 import pytz
 
 # ---------- LOGO ----------
@@ -10,6 +11,8 @@ LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAASwCAYAAADrIbPPAA
 # ---------- PAGE CONFIG ----------
 st.set_page_config(page_title="ParkOS", layout="wide", page_icon="🅿️", initial_sidebar_state="collapsed")
 
+# ---------- AUTO REFRESH ----------
+st_autorefresh(interval=30000, key="refresh")  # Refresh every 30s — countdown handled by JS
 
 # ---------- STYLESHEET ----------
 st.markdown("""
@@ -82,21 +85,17 @@ iframe, .stMarkdown, .stButton,
     z-index: 0;
 }
 .main.block-container {
-    padding: 0.25rem 1.25rem 4rem!important;
+    padding: 1.5rem 1.25rem 4rem!important;
     max-width: 480px!important;
     margin: 0 auto!important;
     position: relative;
     z-index: 1;
 }
-/* Streamlit injects 6rem top padding internally — kill it */
-.block-container { padding-top: 0.25rem!important; }
-section.main > div.block-container { padding-top: 0.25rem!important; }
-div[data-testid="stAppViewBlockContainer"] { padding-top: 0.25rem!important; }
 
 /* Desktop layout */
 @media (min-width: 769px) {
     .main.block-container {
-        padding: 0.25rem 2rem 4rem!important;
+        padding: 2rem 2rem 4rem!important;
         max-width: 900px!important;
     }
 }
@@ -109,11 +108,6 @@ p, li { color: var(--text-1); font-size: 0.9rem; line-height: 1.6; }
 
 #MainMenu, footer, header { visibility: hidden; }
 .stDeployButton, div[data-testid="stDecoration"] { display: none; }
-section[data-testid="stSidebar"] { display: none; }
-div[data-testid="stToolbar"] { display: none; }
-div[data-testid="stHeader"] { display: none !important; height: 0 !important; }
-div[data-testid="stStatusWidget"] { display: none; }
-div[data-testid="collapsedControl"] { display: none; }
 
 h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
@@ -181,26 +175,6 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-.signout-btn {
-    background: rgba(99,102,241,0.1);
-    border: 1px solid rgba(99,102,241,0.3);
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--accent-2);
-    cursor: pointer;
-    transition: all 0.18s;
-    text-decoration: none;
-    letter-spacing: 0.02em;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-}
-.signout-btn:hover {
-    background: rgba(99,102,241,0.2);
-    border-color: rgba(99,102,241,0.6);
-    color: #fff;
 }
 .user-pill {
     background: var(--surface-2);
@@ -687,22 +661,12 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     transition: all 0.18s ease!important;
     min-height: 44px!important;
     letter-spacing: 0.01em!important;
-    touch-action: manipulation!important;
-    -webkit-tap-highlight-color: transparent!important;
 }
-.stButton > button[kind="primary"],
-[data-testid="stFormSubmitButton"] > button {
+.stButton > button[kind="primary"] {
     background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%)!important;
     border: none!important;
     color: #fff!important;
     box-shadow: var(--shadow-accent)!important;
-    -webkit-tap-highlight-color: transparent!important;
-    touch-action: manipulation!important;
-}
-[data-testid="stFormSubmitButton"] > button:active {
-    transform: scale(0.97)!important;
-    box-shadow: 0 2px 8px rgba(99,102,241,0.3)!important;
-    transition: transform 0.08s ease, box-shadow 0.08s ease!important;
 }
 .stButton > button[kind="primary"]:hover {
     box-shadow: 0 6px 24px rgba(99,102,241,0.4)!important;
@@ -812,7 +776,6 @@ supabase = init_supabase()
 # ---------- HELPERS ----------
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 
-@st.cache_data(ttl=30, show_spinner=False)
 def get_user(u, p):
     res = supabase.table("users").select("id, vehicle_number").eq("username", u).eq("password_hash", hash_password(p)).execute()
     if res.data:
@@ -999,25 +962,18 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Welcome back</div>
         <div class="lp-sub">Sign in to manage your parking sessions</div>
         """, unsafe_allow_html=True)
-
-        @st.fragment
-        def login_fragment():
-            with st.form("login_form"):
-                u = st.text_input("Username", placeholder="Enter your username", label_visibility="collapsed")
-                p = st.text_input("Password", type="password", placeholder="Enter your password", label_visibility="collapsed")
-                st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-                submitted = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
-            if submitted:
-                user = get_user(u, p)
-                if user:
-                    st.session_state.user_id = user[0]
-                    st.session_state.vehicle_number = user[1]
-                    st.session_state.username = u
-                    st.rerun()
-                else:
-                    st.error("Incorrect username or password.")
-
-        login_fragment()
+        u = st.text_input("Username", key="login_user", placeholder="Enter your username", label_visibility="collapsed")
+        p = st.text_input("Password", type="password", key="login_pass", placeholder="Enter your password", label_visibility="collapsed")
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+        if st.button("Sign In →", type="primary", use_container_width=True):
+            user = get_user(u, p)
+            if user:
+                st.session_state.user_id = user[0]
+                st.session_state.vehicle_number = user[1]
+                st.session_state.username = u
+                st.rerun()
+            else:
+                st.error("Incorrect username or password.")
         st.markdown("""<div class="lp-divider">
             <div class="lp-divider-line"></div>
             <div class="lp-divider-text">No account yet?</div>
@@ -1032,31 +988,24 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
         <div class="lp-title">Create your account</div>
         <div class="lp-sub">Join ParkOS and start parking smarter today</div>
         """, unsafe_allow_html=True)
-
-        @st.fragment
-        def register_fragment():
-            import re
-            with st.form("register_form"):
-                raw_u = st.text_input("Username", placeholder="Choose a username", label_visibility="collapsed")
-                p = st.text_input("Password", type="password", placeholder="Choose a strong password", label_visibility="collapsed")
-                st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-                reg_submitted = st.form_submit_button("Create Account →", type="primary", use_container_width=True)
-            u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
-            if u != raw_u and raw_u:
-                st.caption(f"Username will be saved as: **{u}**")
-            if reg_submitted:
-                if u.strip() and p.strip():
-                    if create_user(u, p):
-                        st.success("✅ Account created! Sign in to continue.")
-                        st.session_state.auth_mode = 'signin'
-                        st.rerun()
-                    else:
-                        st.error("That username is already taken.")
+        import re
+        raw_u = st.text_input("Username", key="reg_user", placeholder="Choose a username", label_visibility="collapsed")
+        # Sanitize: spaces → underscore, keep only letters/numbers/dot/underscore
+        u = re.sub(r'[^a-zA-Z0-9._]', '', raw_u.replace(' ', '_'))
+        if u != raw_u and raw_u:
+            st.caption(f"Username will be saved as: **{u}**")
+        p = st.text_input("Password", type="password", key="reg_pass", placeholder="Choose a strong password", label_visibility="collapsed")
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
+        if st.button("Create Account →", type="primary", use_container_width=True):
+            if u.strip() and p.strip():
+                if create_user(u, p):
+                    st.success("✅ Account created! Sign in to continue.")
+                    st.session_state.auth_mode = 'signin'
+                    st.rerun()
                 else:
-                    st.error("Please fill in all fields.")
-
-        register_fragment()
-
+                    st.error("That username is already taken.")
+            else:
+                st.error("Please fill in all fields.")
         st.markdown("""<div class="lp-divider">
             <div class="lp-divider-line"></div>
             <div class="lp-divider-text">Already have an account?</div>
@@ -1105,16 +1054,16 @@ st.markdown(f"""
             <div class="user-avatar">{avatar_letter}</div>
             {username}
         </div>
-        <a href="?signout=1" class="signout-btn">Sign Out</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Handle sign out via query param
-if "signout" in st.query_params:
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.query_params.clear()
-    st.rerun()
+# Sign out tucked neatly below header
+col_so1, col_so2, col_so3 = st.columns([3, 1, 1])
+with col_so3:
+    if st.button("Sign Out", type="secondary", use_container_width=True):
+        for key in list(st.session_state.keys()): del st.session_state[key]
+        st.rerun()
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
@@ -1140,7 +1089,7 @@ now_dt = now_dt_fresh_ist
 earliest_allowed_dt_ist = get_next_30min_slot_tz(now_dt_fresh_ist)
 
 # ── Fetch bookings (cached for 30s to reduce Supabase calls) ──
-@st.cache_data(ttl=20, show_spinner=False)
+@st.cache_data(ttl=30, show_spinner=False)
 def fetch_bookings(user_id):
     res = supabase.table("bookings").select("id, slot_number, start_datetime, end_datetime").eq("user_id", user_id).order("start_datetime").execute()
     return [(r["id"], r["slot_number"], r["start_datetime"], r["end_datetime"]) for r in res.data]
