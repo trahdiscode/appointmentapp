@@ -687,7 +687,8 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     min-height: 44px!important;
     letter-spacing: 0.01em!important;
 }
-.stButton > button[kind="primary"] {
+.stButton > button[kind="primary"],
+[data-testid="stFormSubmitButton"] > button {
     background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%)!important;
     border: none!important;
     color: #fff!important;
