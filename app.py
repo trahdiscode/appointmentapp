@@ -200,6 +200,11 @@ button[data-testid="baseButton-secondary"] {
     min-width: 0 !important;
     width: auto !important;
 }
+button[data-testid="baseButton-secondary"] p {
+    color: #A5B4FC !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+}
 button[data-testid="baseButton-secondary"]:hover {
     background: linear-gradient(135deg, rgba(99,102,241,0.26) 0%, rgba(99,102,241,0.14) 100%) !important;
     border-color: rgba(99,102,241,0.65) !important;
