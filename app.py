@@ -182,37 +182,37 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 0.5rem;
 }
-.signout-btn {
-    display: inline-flex;
-    align-items: center;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 7px 16px;
-    font-size: 0.72rem;
-    font-family: var(--font);
-    font-weight: 600;
-    color: var(--text-2);
-    cursor: pointer;
-    transition: all 0.18s;
+a.signout-btn,
+a.signout-btn:link,
+a.signout-btn:visited,
+a.signout-btn:active,
+a.signout-btn:focus {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    padding: 7px 16px !important;
+    font-size: 0.72rem !important;
+    font-family: var(--font) !important;
+    font-weight: 600 !important;
+    color: var(--text-2) !important;
+    cursor: pointer !important;
+    transition: all 0.18s !important;
     text-decoration: none !important;
     outline: none !important;
     box-shadow: none !important;
-    letter-spacing: 0.03em;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.03em !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-text-fill-color: var(--text-2) !important;
 }
-.signout-btn:hover {
-    background: rgba(99,102,241,0.12);
-    border-color: rgba(99,102,241,0.45);
-    color: var(--accent-2);
+a.signout-btn:hover {
+    background: rgba(99,102,241,0.12) !important;
+    border-color: rgba(99,102,241,0.45) !important;
+    color: var(--accent-2) !important;
+    -webkit-text-fill-color: var(--accent-2) !important;
     text-decoration: none !important;
-}
-.signout-btn:focus, .signout-btn:active, .signout-btn:visited {
-    outline: none !important;
-    box-shadow: none !important;
-    text-decoration: none !important;
-    color: var(--text-2);
 }
 .user-pill {
     background: var(--surface-2);
