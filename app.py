@@ -1091,10 +1091,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
     st.markdown("""
     <div class="lp-features">
         <div class="lp-feature"><div class="lp-feature-dot"></div>Real-time slot availability across all rows</div>
-        <div class="lp-feature"><div class="lp-feature-dot"></div>Instant booking with live countdown timer</div>
-        <div class="lp-feature"><div class="lp-feature-dot"></div>Secure, private & IST timezone-aware sessions</div>
     </div>
-    <div class="lp-footer">© 2025 ParkOS · All rights reserved</div>
     """, unsafe_allow_html=True)
 
     st.stop()
