@@ -144,7 +144,7 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 .app-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.875rem;
 }
 .app-icon {
     width: 36px;
@@ -158,20 +158,20 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     box-shadow: var(--shadow-accent);
 }
 .app-brand-name {
-    font-size: 1.4rem;
+    font-size: 1.65rem;
     font-weight: 800;
     color: var(--text-1);
     letter-spacing: -0.04em;
     line-height: 1;
 }
 .app-brand-sub {
-    font-size: 0.58rem;
+    font-size: 0.62rem;
     font-weight: 600;
     color: var(--text-3);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     line-height: 1;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 .header-right {
     display: flex;
@@ -1114,7 +1114,7 @@ avatar_letter = username[0].upper() if username else "U"
 col_hdr, col_right = st.columns([5, 3])
 with col_hdr:
     st.markdown(f'''<div class="app-brand" style="padding:0.6rem 0 0.4rem;">
-    <img src="{LOGO_B64}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
+    <img src="{LOGO_B64}" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 10px rgba(99,102,241,0.35));" />
     <div><div class="app-brand-name">ParkOS</div><div class="app-brand-sub">Smart Parking</div></div>
 </div>''', unsafe_allow_html=True)
 with col_right:
