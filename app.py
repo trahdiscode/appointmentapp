@@ -1169,6 +1169,38 @@ def fetch_bookings(user_id):
 
 all_user_bookings = fetch_bookings(st.session_state.user_id)
 
+# ── Module-level interest fetcher (must be outside nested scope for cache to work) ──
+@st.cache_data(ttl=3, show_spinner=False)
+def fetch_interests_cached(start_str, end_str):
+    """Return {user_id: slot_number} for active interests in this time window."""
+    try:
+        res = supabase.table("slot_interests").select(
+            "user_id, slot_number, start_datetime, end_datetime, updated_at"
+        ).execute()
+        now_utc = datetime.now(pytz.utc)
+        result = {}
+        for r in res.data:
+            # Skip if not overlapping requested window
+            if r["end_datetime"] <= start_str or r["start_datetime"] >= end_str:
+                continue
+            # Parse Supabase ISO timestamp (handles +00:00 and Z)
+            try:
+                raw = r["updated_at"].replace("Z", "+00:00")
+                # Handle both '2026-02-22T10:30:00+00:00' and '2026-02-22 10:30:00+00:00'
+                raw = raw.replace(" ", "T")
+                from datetime import timezone
+                updated = datetime.fromisoformat(raw)
+                if updated.tzinfo is None:
+                    updated = updated.replace(tzinfo=pytz.utc)
+                if (now_utc - updated).total_seconds() > 30:
+                    continue
+            except Exception:
+                continue
+            result[r["user_id"]] = r["slot_number"]
+        return result
+    except Exception:
+        return {}
+
 total_bookings = len(all_user_bookings)
 user_current_future = [b for b in all_user_bookings if parse_dt(b[3]) > now_dt]
 past_bookings_list = sorted(
@@ -1330,6 +1362,10 @@ if past_bookings_list:
 # ── Book New Slot ──
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
+# Auto-refresh every 3 seconds to show real-time slot interest from other users
+if AUTOREFRESH_AVAILABLE:
+    st_autorefresh(interval=3000, limit=None, key="slot_interest_refresh")
+
 if not user_has_active_or_future:
     st.markdown('<div class="section-label">New Booking</div>', unsafe_allow_html=True)
 
@@ -1414,61 +1450,32 @@ if not user_has_active_or_future:
                 if not (r["end_datetime"] <= start_str or r["start_datetime"] >= end_str)}
     blocked = fetch_blocked(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
 
-    # ── Real-time slot interest (who is currently viewing which slot) ──
+    # ── Real-time slot interest helpers ──
     def upsert_interest(slot_name):
-        """Record that this user is currently eyeing a slot."""
         try:
             supabase.table("slot_interests").upsert({
                 "user_id": st.session_state.user_id,
                 "slot_number": slot_name,
                 "start_datetime": start_dt.strftime("%Y-%m-%d %H:%M"),
                 "end_datetime": end_dt.strftime("%Y-%m-%d %H:%M"),
-                "updated_at": datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+                "updated_at": datetime.now(pytz.utc).isoformat()
             }, on_conflict="user_id").execute()
         except Exception:
-            pass  # table may not exist yet – graceful degradation
+            pass
 
     def remove_interest():
-        """Remove this user's interest record."""
         try:
             supabase.table("slot_interests").delete().eq("user_id", st.session_state.user_id).execute()
         except Exception:
             pass
 
-    @st.cache_data(ttl=3, show_spinner=False)
-    def fetch_interests(start_str, end_str):
-        """Get slots other users are currently looking at (stale > 30s excluded)."""
-        try:
-            res = supabase.table("slot_interests").select("user_id, slot_number, start_datetime, end_datetime, updated_at").execute()
-            now_utc = datetime.now(pytz.utc)
-            interest_slots = set()
-            interest_user_slots = {}
-            for r in res.data:
-                # Only consider interests overlapping the same time window
-                if r["end_datetime"] <= start_str or r["start_datetime"] >= end_str:
-                    continue
-                # Expire stale records (> 30 seconds old)
-                try:
-                    updated = datetime.strptime(r["updated_at"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.utc)
-                    if (now_utc - updated).total_seconds() > 30:
-                        continue
-                except Exception:
-                    continue
-                interest_user_slots[r["user_id"]] = r["slot_number"]
-                interest_slots.add(r["slot_number"])
-            return interest_slots, interest_user_slots
-        except Exception:
-            return set(), {}
-
-    # Auto-refresh every 3 seconds when on booking page
-    if AUTOREFRESH_AVAILABLE:
-        st_autorefresh(interval=3000, key="slot_refresh")
-
-    # Fetch who is currently viewing which slot
-    interests, interest_map = fetch_interests(start_dt.strftime("%Y-%m-%d %H:%M"), end_dt.strftime("%Y-%m-%d %H:%M"))
-    # Remove own slot from interests (we show it as blue "selected" instead)
-    own_interest_slot = interest_map.get(st.session_state.user_id)
-    other_interests = {s for uid, s in interest_map.items() if uid != st.session_state.user_id}
+    # Use the module-level cached fetcher
+    interest_map = fetch_interests_cached(
+        start_dt.strftime("%Y-%m-%d %H:%M"),
+        end_dt.strftime("%Y-%m-%d %H:%M")
+    )
+    other_interests = {slot for uid, slot in interest_map.items()
+                       if uid != st.session_state.user_id}
 
     slots = [f"A{i}" for i in range(1, 11)] + [f"B{i}" for i in range(1, 11)]
     selected = st.session_state.selected_slot or ""
@@ -1518,6 +1525,14 @@ if not user_has_active_or_future:
         padding: 0 !important;
         min-height: unset !important;
     }
+    /* Orange interest slot overlay button — transparent, sits on top of orange div */
+    .interest-slot-wrap { position: relative; height: 36px; }
+    .interest-slot-wrap > div[data-testid="stButton"] {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2;
+    }
+    .interest-slot-wrap > div[data-testid="stButton"] button {
+        height: 36px !important; opacity: 0 !important;
+    }
     </style>""", unsafe_allow_html=True)
 
     for row_prefix in ['A', 'B']:
@@ -1534,9 +1549,19 @@ if not user_has_active_or_future:
                 elif is_selected:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), type="primary", use_container_width=True)
                 elif is_interest:
-                    st.markdown(f'<div style="height:36px;border-radius:8px;border:2px solid #f97316;background:linear-gradient(135deg,#f97316 0%,#fb923c 100%);color:#fff;font-size:0.88rem;font-weight:600;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;letter-spacing:0.01em;box-shadow:0 4px 20px rgba(249,115,22,0.35);cursor:pointer;" title="Someone is viewing this slot">{s}</div>', unsafe_allow_html=True)
-                    # Still allow clicking an orange (interest) slot — it's not confirmed yet
-                    st.button("", key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True, label_visibility="collapsed")
+                    # Orange div visible, invisible button overlaid on top so it stays clickable
+                    st.markdown(
+                        f'<div style="position:relative;height:36px;">'
+                        f'<div style="position:absolute;inset:0;border-radius:8px;'
+                        f'background:linear-gradient(135deg,#f97316 0%,#fb923c 100%);'
+                        f'color:#fff;font-size:0.88rem;font-weight:600;display:flex;'
+                        f'align-items:center;justify-content:center;font-family:Outfit,sans-serif;'
+                        f'box-shadow:0 4px 14px rgba(249,115,22,.4);pointer-events:none;z-index:1;">{s}</div>'
+                        f'<div style="position:absolute;inset:0;z-index:2;opacity:0;">',
+                        unsafe_allow_html=True
+                    )
+                    st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
+                    st.markdown('</div></div>', unsafe_allow_html=True)
                 else:
                     st.button(s, key=f"slot_{s}", on_click=handle_slot_click, args=(s,), use_container_width=True)
 
