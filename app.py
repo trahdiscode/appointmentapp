@@ -82,21 +82,21 @@ iframe, .stMarkdown, .stButton,
     z-index: 0;
 }
 .main.block-container {
-    padding: 0.25rem 1.25rem 4rem!important;
+    padding: 2rem 1.25rem 4rem!important;
     max-width: 480px!important;
     margin: 0 auto!important;
     position: relative;
     z-index: 1;
 }
 /* Streamlit injects 6rem top padding internally — kill it */
-.block-container { padding-top: 0.25rem!important; }
-section.main > div.block-container { padding-top: 0.25rem!important; }
-div[data-testid="stAppViewBlockContainer"] { padding-top: 0.25rem!important; }
+.block-container { padding-top: 2rem!important; }
+section.main > div.block-container { padding-top: 2rem!important; }
+div[data-testid="stAppViewBlockContainer"] { padding-top: 2rem!important; }
 
 /* Desktop layout */
 @media (min-width: 769px) {
     .main.block-container {
-        padding: 0.25rem 2rem 4rem!important;
+        padding: 2rem 2rem 4rem!important;
         max-width: 900px!important;
     }
 }
