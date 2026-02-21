@@ -1109,32 +1109,29 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header — fully in HTML, sign out uses a query param trick via button hidden below
-st.markdown(f"""
-<div class="app-header">
-    <div class="app-brand">
-        <img src="{LOGO_B64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
-        <div>
-            <div class="app-brand-name">ParkOS</div>
-            <div class="app-brand-sub">Smart Parking</div>
-        </div>
+# Header HTML (no signout link — handled by real st.button below)
+col_hdr, col_user = st.columns([1, 1])
+with col_hdr:
+    st.markdown(f'''
+<div class="app-brand" style="padding:0.75rem 0 0.5rem;">
+    <img src="{LOGO_B64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
+    <div>
+        <div class="app-brand-name">ParkOS</div>
+        <div class="app-brand-sub">Smart Parking</div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.625rem;">
-        <div class="user-pill">
-            <div class="user-avatar">{avatar_letter}</div>
-            {username}
-        </div>
-        <a href="#" onclick="window.history.replaceState(null,'','?signout=1');window.location.href='?signout=1';" class="signout-btn">Sign Out</a>
+</div>''', unsafe_allow_html=True)
+with col_user:
+    st.markdown(f'''
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.75rem 0 0.5rem;">
+    <div class="user-pill">
+        <div class="user-avatar">{avatar_letter}</div>
+        {username}
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Handle sign out via query param
-if "signout" in st.query_params:
-    st.cache_data.clear()
-    for key in list(st.session_state.keys()): del st.session_state[key]
-    st.query_params.clear()
-    st.rerun()
+</div>''', unsafe_allow_html=True)
+    if st.button("Sign Out", key="signout_btn", type="secondary", use_container_width=True):
+        for key in list(st.session_state.keys()): del st.session_state[key]
+        st.rerun()
+st.markdown('<div style="border-bottom:1px solid var(--border);margin-bottom:0.75rem;"></div>', unsafe_allow_html=True)
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
