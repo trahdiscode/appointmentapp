@@ -839,11 +839,13 @@ def create_user(u, p):
     try:
         existing = supabase.table("users").select("id").eq("username", u).execute()
         if existing.data:
-            return False
-        supabase.table("users").insert({"username": u, "password_hash": hash_password(p)}).execute()
-        return True
+            return None
+        res = supabase.table("users").insert({"username": u, "password_hash": hash_password(p)}).execute()
+        if res.data:
+            return res.data[0]["id"]
+        return None
     except Exception:
-        return False
+        return None
 
 ist_timezone = pytz.timezone('Asia/Kolkata')
 
