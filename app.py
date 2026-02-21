@@ -1042,7 +1042,7 @@ if 'user_id' not in st.session_state or st.session_state.user_id is None:
             <div class="lp-divider-text">No account yet?</div>
             <div class="lp-divider-line"></div>
         </div>""", unsafe_allow_html=True)
-        if st.button("Create a free account", type="secondary", use_container_width=True):
+        if st.button("Don't have an account? Create a new account", type="secondary", use_container_width=True):
             st.session_state.auth_mode = 'register'
             st.rerun()
 
