@@ -141,8 +141,8 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 0 0.75rem;
-    margin-bottom: 0.25rem;
+    padding: 0.75rem 0 0.5rem;
+    margin-bottom: 0.75rem;
     border-bottom: 1px solid var(--border);
 }
 .app-brand {
@@ -803,6 +803,10 @@ div[data-testid="stMetric"] {
 .stTabs [data-baseweb="tab-panel"] { padding-top: 1.25rem!important; }
 
 div[data-testid="stHorizontalBlock"] { gap: 0.4rem!important; }
+/* Tighten the default gap between Streamlit elements */
+div[data-testid="stVerticalBlock"] { gap: 0.5rem!important; }
+div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="stVerticalBlock"] > div[data-testid="element-container"] { margin-bottom: 0!important; }
 
 /* Expander */
 details { border: 1px solid var(--border)!important; border-radius: var(--radius)!important; background: var(--surface)!important; }
