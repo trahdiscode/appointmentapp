@@ -188,14 +188,15 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 6px;
     padding: 7px 13px;
-    background: linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.07) 100%);
-    border: 1px solid rgba(239,68,68,0.38);
+    background: linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.07) 100%) !important;
+    border: 1px solid rgba(239,68,68,0.38) !important;
     border-radius: 10px;
-    color: #FCA5A5;
+    color: #FCA5A5 !important;
+    -webkit-text-fill-color: #FCA5A5 !important;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.02em;
-    text-decoration: none;
+    text-decoration: none !important;
     white-space: nowrap;
     box-shadow: 0 2px 12px rgba(239,68,68,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
     transition: all 0.18s ease;
@@ -203,12 +204,13 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     flex-shrink: 0;
 }
 .so-btn:hover {
-    background: linear-gradient(135deg, rgba(239,68,68,0.26) 0%, rgba(239,68,68,0.14) 100%);
-    border-color: rgba(239,68,68,0.65);
-    color: #fff;
+    background: linear-gradient(135deg, rgba(239,68,68,0.26) 0%, rgba(239,68,68,0.14) 100%) !important;
+    border-color: rgba(239,68,68,0.65) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
     box-shadow: 0 4px 18px rgba(239,68,68,0.28);
     transform: translateY(-1px);
-    text-decoration: none;
+    text-decoration: none !important;
 }
 .so-btn svg {
     flex-shrink: 0;
