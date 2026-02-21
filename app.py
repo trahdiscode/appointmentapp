@@ -119,21 +119,17 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 
 /* ── Section label ── */
 .section-label {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-3);
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    margin-bottom: 0.875rem;
 }
-.section-label::after {
-    content: '';
-    flex: 1;
+.header-rule {
     height: 1px;
-    background: var(--border);
+    background: linear-gradient(90deg, var(--border-hover) 0%, transparent 80%);
+    margin: 0.5rem 0 1.25rem;
 }
 
 /* ── App Header ── */
@@ -463,8 +459,9 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
 /* ── Divider ── */
 .divider {
     border: none;
-    border-top: 1px solid var(--border);
-    margin: 1.5rem 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--border-hover) 20%, var(--border-hover) 80%, transparent 100%);
+    margin: 2rem 0;
 }
 
 /* ── Step header ── */
@@ -1139,7 +1136,7 @@ if st.query_params.get("signout") == "true":
     for key in list(st.session_state.keys()): del st.session_state[key]
     st.rerun()
 
-st.markdown('<div style="border-bottom:1px solid var(--border);margin-bottom:0.875rem;"></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-rule"></div>', unsafe_allow_html=True)
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
@@ -1185,7 +1182,7 @@ user_has_active_or_future = bool(user_current_future)
 upcoming_count = len([b for b in user_current_future if parse_dt(b[2]) > now_dt])
 
 # ── Overview ──
-st.markdown('<div class="section-label" style="margin-top:2rem;margin-bottom:0.75rem;">Overview</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-label" style="margin-top:1rem;">Overview</div>', unsafe_allow_html=True)
 
 # Stats row
 st.markdown(f"""
@@ -1267,8 +1264,8 @@ else:
     """, unsafe_allow_html=True)
 
 # ── Bookings ──
-st.markdown('<hr class="divider" style="margin:1.25rem 0 1rem;">', unsafe_allow_html=True)
-st.markdown('<div class="section-label" style="margin-bottom:0.75rem;">Your Bookings</div>', unsafe_allow_html=True)
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
+st.markdown('<div class="section-label">Your Bookings</div>', unsafe_allow_html=True)
 
 if user_current_future:
     for booking_id, slot_number, start_dt_str, end_dt_str in user_current_future:
@@ -1331,10 +1328,10 @@ if past_bookings_list:
             """, unsafe_allow_html=True)
 
 # ── Book New Slot ──
-st.markdown('<hr class="divider" style="margin:2rem 0 1.5rem;">', unsafe_allow_html=True)
+st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 if not user_has_active_or_future:
-    st.markdown('<div class="section-label" style="margin-bottom:0.75rem;">New Booking</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">New Booking</div>', unsafe_allow_html=True)
 
     # Step 1
     st.markdown("""
