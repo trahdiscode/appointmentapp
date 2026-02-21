@@ -1124,13 +1124,14 @@ st.markdown(f"""
             <div class="user-avatar">{avatar_letter}</div>
             {username}
         </div>
-        <a href="?signout=1" class="signout-btn">Sign Out</a>
+        <a href="#" onclick="window.history.replaceState(null,'','?signout=1');window.location.href='?signout=1';" class="signout-btn">Sign Out</a>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # Handle sign out via query param
 if "signout" in st.query_params:
+    st.cache_data.clear()
     for key in list(st.session_state.keys()): del st.session_state[key]
     st.query_params.clear()
     st.rerun()
