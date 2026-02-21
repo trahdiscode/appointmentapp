@@ -182,32 +182,32 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     align-items: center;
     gap: 0.5rem;
 }
-/* Sign Out button — targeted by key */
-div[data-testid="stButton"]:has(button[kind="secondary"]#signout_btn) button,
-button[kind="secondary"][data-testid="baseButton-secondary"] {
-    background: transparent !important;
-}
+/* Sign Out — compact power icon button */
 [data-testid="column"]:last-child .stButton > button[kind="secondary"] {
-    background: linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%) !important;
-    border: 1px solid rgba(239,68,68,0.35) !important;
+    background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.07) 100%) !important;
+    border: 1px solid rgba(239,68,68,0.4) !important;
     color: #FCA5A5 !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em !important;
-    min-height: 36px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 12px rgba(239,68,68,0.1) !important;
-    transition: all 0.18s ease !important;
-    padding: 0 1rem !important;
-    text-decoration: none !important;
     -webkit-text-fill-color: #FCA5A5 !important;
+    font-size: 1.1rem !important;
+    font-weight: 400 !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    width: 36px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 12px rgba(239,68,68,0.15), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+    transition: all 0.18s ease !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 [data-testid="column"]:last-child .stButton > button[kind="secondary"]:hover {
-    background: linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(239,68,68,0.12) 100%) !important;
-    border-color: rgba(239,68,68,0.6) !important;
+    background: linear-gradient(135deg, rgba(239,68,68,0.28) 0%, rgba(239,68,68,0.15) 100%) !important;
+    border-color: rgba(239,68,68,0.7) !important;
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
-    box-shadow: 0 4px 20px rgba(239,68,68,0.2) !important;
+    box-shadow: 0 4px 20px rgba(239,68,68,0.3) !important;
     transform: translateY(-1px) !important;
 }
 .user-pill {
@@ -1105,29 +1105,24 @@ if 'username' not in st.session_state:
 username = st.session_state.get('username', 'User')
 avatar_letter = username[0].upper() if username else "U"
 
-# Header HTML (no signout link — handled by real st.button below)
-col_hdr, col_user = st.columns([1, 1])
+# Header: brand left, user pill + sign out right
+col_hdr, col_pill, col_so = st.columns([5, 2, 1])
 with col_hdr:
-    st.markdown(f'''
-<div class="app-brand" style="padding:0.75rem 0 0.5rem;">
-    <img src="{LOGO_B64}" style="width:38px;height:38px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
-    <div>
-        <div class="app-brand-name">ParkOS</div>
-        <div class="app-brand-sub">Smart Parking</div>
-    </div>
+    st.markdown(f'''<div class="app-brand" style="padding:0.6rem 0 0.4rem;">
+    <img src="{LOGO_B64}" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(99,102,241,0.3));" />
+    <div><div class="app-brand-name">ParkOS</div><div class="app-brand-sub">Smart Parking</div></div>
 </div>''', unsafe_allow_html=True)
-with col_user:
-    st.markdown(f'''
-<div style="display:flex;align-items:center;justify-content:flex-end;gap:0.5rem;padding:0.75rem 0 0.5rem;">
-    <div class="user-pill">
-        <div class="user-avatar">{avatar_letter}</div>
-        {username}
-    </div>
+with col_pill:
+    st.markdown(f'''<div style="display:flex;align-items:center;justify-content:flex-end;padding:0.6rem 0 0.4rem;">
+    <div class="user-pill"><div class="user-avatar">{avatar_letter}</div>{username}</div>
 </div>''', unsafe_allow_html=True)
-    if st.button("Sign Out", key="signout_btn", type="secondary", use_container_width=True):
+with col_so:
+    st.markdown('<div style="padding-top:0.55rem;">', unsafe_allow_html=True)
+    if st.button("⏻", key="signout_btn", type="secondary", use_container_width=True, help="Sign Out"):
         for key in list(st.session_state.keys()): del st.session_state[key]
         st.rerun()
-st.markdown('<div style="border-bottom:1px solid var(--border);margin-bottom:0.75rem;"></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div style="border-bottom:1px solid var(--border);margin-bottom:0.875rem;"></div>', unsafe_allow_html=True)
 
 # Vehicle number gate
 if 'vehicle_number' not in st.session_state or st.session_state.vehicle_number is None:
