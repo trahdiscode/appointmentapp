@@ -183,24 +183,36 @@ h1, h2, h3, h4 { font-family: var(--font); letter-spacing: -0.02em; }
     gap: 0.5rem;
 }
 .signout-btn {
-    background: rgba(99,102,241,0.1);
-    border: 1px solid rgba(99,102,241,0.3);
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 6px 14px;
+    padding: 7px 16px;
     font-size: 0.72rem;
+    font-family: var(--font);
     font-weight: 600;
-    color: var(--accent-2);
+    color: var(--text-2);
     cursor: pointer;
     transition: all 0.18s;
-    text-decoration: none;
-    letter-spacing: 0.02em;
+    text-decoration: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    letter-spacing: 0.03em;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 .signout-btn:hover {
-    background: rgba(99,102,241,0.2);
-    border-color: rgba(99,102,241,0.6);
-    color: #fff;
+    background: rgba(99,102,241,0.12);
+    border-color: rgba(99,102,241,0.45);
+    color: var(--accent-2);
+    text-decoration: none !important;
+}
+.signout-btn:focus, .signout-btn:active, .signout-btn:visited {
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+    color: var(--text-2);
 }
 .user-pill {
     background: var(--surface-2);
@@ -709,17 +721,19 @@ div[data-baseweb="popover"] { background: var(--surface-2)!important; border: 1p
     transform: translateY(-1px)!important;
 }
 .stButton > button[kind="secondary"] {
-    background: transparent!important;
+    background: var(--surface)!important;
     border: 1px solid var(--border)!important;
-    color: var(--text-3)!important;
+    color: var(--text-2)!important;
     font-size: 0.78rem!important;
     min-height: 34px!important;
     padding: 0 0.75rem!important;
+    text-decoration: none!important;
 }
 .stButton > button[kind="secondary"]:hover {
-    border-color: #3B82F6!important;
-    color: #3B82F6!important;
-    background: rgba(59,130,246,0.08)!important;
+    border-color: var(--accent)!important;
+    color: var(--accent)!important;
+    background: var(--accent-soft)!important;
+    text-decoration: none!important;
 }
 
 /* Slot buttons */
